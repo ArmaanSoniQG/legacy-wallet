@@ -1,0 +1,14 @@
+{
+  "scanned": 1,
+  "score": 30,
+  "findings": [
+    {
+      "file": "sign.js",
+      "line": 1,
+      "rule": "ECDSA_SHOR",
+      "note": "ECDSA vulnerable to Shor?s algorithm",
+      "severity": 3
+    }
+  ],
+  "timestamp": "2025-05-09T00:07:45.740Z"
+}
