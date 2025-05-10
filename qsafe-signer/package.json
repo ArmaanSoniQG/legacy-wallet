@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "test": "echo \"no default test\"",
+  "test:dilithium": "node tests/dilithium.demo.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@noble/post-quantum": "^0.4.1",
     "chalk": "^4.1.2",
-    "dilithium-crystals": "^1.0.6",
     "kyber-crystals": "^1.0.7"
   }
 }
