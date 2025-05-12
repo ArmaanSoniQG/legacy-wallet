@@ -1,53 +1,78 @@
 #!/usr/bin/env node
-// wallet.js ─ key‑generation CLI with PQ support
+// wallet.js — CLI for PQ key generation + backup
 
-const fs = require("fs");
-const path = require("path");
-const { hideBin } = require("yargs/helpers");
-const yargs = require("yargs/yargs")(hideBin(process.argv));
+const yargs       = require('yargs');
+const { hideBin } = require('yargs/helpers');
+const fs          = require('fs');
+const crypto      = require('crypto');
 
-// ---- pull generators from qsafe‑signer ------------------
-const {
-  generateDilithiumKeyPair
-} = require("./qsafe-signer/src");           // CommonJS bundle export
+// We'll do a dynamic import of Noble's PQ library for Dilithium
+async function generateKeys(alg) {
+  if (alg === 'dilithium') {
+    // 1) Dynamically import the Noble PQC library
+    const pq = await import('@noble/post-quantum');
+    // 2) Wait for WASM init (Dilithium is under `pq.mlDsa`)
+    await pq.mlDsa.ready;
 
-// ---- 1. parse args --------------------------------------
-const argv = yargs
-  .option("alg", {
-    alias: "a",
-    choices: ["ecdsa", "dilithium"],
-    default: "ecdsa",
-    describe: "Signature algorithm to generate"
-  })
-  .help()
-  .argv;
+    // 3) Generate a Dilithium keypair (default = Dilithium5)
+    //    If you want a smaller signature, do: pq.mlDsa.keyPair({ name: 'Dilithium3' }) etc.
+    const { publicKey, privateKey } = pq.mlDsa.keyPair();
 
-// ---- 2. key‑generation ----------------------------------
-let publicKey, privateKey, algorithm;
-
-if (argv.alg === "dilithium") {
-  ({ publicKey, secretKey: privateKey } = generateDilithiumKeyPair());
-  algorithm = "dilithium5";
-} else {
-  // fallback: ECDSA secp256k1
-  const { generateKeyPairSync } = require("crypto");
-  const { publicKey: pub, privateKey: priv } = generateKeyPairSync("ec", {
-    namedCurve: "secp256k1",
-    publicKeyEncoding: { type: "spki", format: "der" },
-    privateKeyEncoding: { type: "pkcs8", format: "der" }
-  });
-  publicKey = pub;
-  privateKey = priv;
-  algorithm = "ecdsa-secp256k1";
+    // 4) Write to wallet.json
+    fs.writeFileSync(
+      'wallet.json',
+      JSON.stringify({
+        alg: 'dilithium',
+        publicKey:  Buffer.from(publicKey).toString('base64'),
+        privateKey: Buffer.from(privateKey).toString('base64')
+      }, null, 2)
+    );
+    console.log('🔑  Dilithium keys written to wallet.json');
+  } else {
+    // Default ECDSA (classic)
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', {
+      namedCurve: 'secp256k1'
+    });
+    fs.writeFileSync(
+      'wallet.json',
+      JSON.stringify({
+        alg: 'ecdsa',
+        publicKey:  publicKey.export({ type: 'spki',  format: 'pem' }),
+        privateKey: privateKey.export({ type: 'pkcs8', format: 'pem' })
+      }, null, 2)
+    );
+    console.log('🔑  ECDSA keys written to wallet.json');
+  }
 }
 
-// ---- 3. persist wallet ----------------------------------
-const wallet = {
-  algorithm,
-  publicKey: Buffer.from(publicKey).toString("base64"),
-  privateKey: Buffer.from(privateKey).toString("base64")
-};
-
-const outPath = path.resolve(__dirname, "wallet.json");
-fs.writeFileSync(outPath, JSON.stringify(wallet, null, 2));
-console.log(`✅  ${algorithm} keys written to wallet.json`);
+// yargs CLI commands
+yargs(hideBin(process.argv))
+  .command(
+    'gen',
+    'Generate a key-pair (ECDSA or Dilithium)',
+    y => y.option('alg', {
+      default: 'ecdsa',
+      choices: ['ecdsa', 'dilithium'],
+      describe: 'Key algorithm'
+    }),
+    argv => generateKeys(argv.alg).catch(err => {
+      console.error('❌  Keygen failed:', err);
+      process.exit(1);
+    })
+  )
+  .command(
+    'backup',
+    'Encrypt wallet.json → wallet.enc using Kyber KEM',
+    y => y.option('kem', {
+      default: 'kyber',
+      choices: ['kyber'],
+      describe: 'KEM algorithm (only kyber for now)'
+    }),
+    async () => {
+      const { backup } = require('./wallet-backup');
+      await backup();
+    }
+  )
+  .demandCommand(1, 'You need to specify a command')
+  .help()
+  .argv;
