@@ -1,16 +1,10 @@
 {
   "name": "legacy-wallet",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "bin": { "wallet": "wallet.js" },
   "dependencies": {
-    "ethereumjs-util": "^7.1.5",
-    "ethereumjs-wallet": "^1.0.2"
+    "@noble/post-quantum": "0.4.1",
+    "yargs": "^17.7.2"
   }
 }

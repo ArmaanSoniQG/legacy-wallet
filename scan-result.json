@@ -1,0 +1,43 @@
+{
+  "scanned": 8,
+  "score": 0,
+  "findings": [
+    {
+      "file": "legacy-wallet/sign.js",
+      "line": 1,
+      "rule": "ECDSA_SHOR",
+      "note": "ECDSA vulnerable to Shor?s algorithm",
+      "severity": 3
+    },
+    {
+      "file": "legacy-wallet/wallet.js",
+      "line": 34,
+      "rule": "ECDSA_SHOR",
+      "note": "ECDSA vulnerable to Shor?s algorithm",
+      "severity": 3
+    },
+    {
+      "file": "legacy-wallet/wallet.js",
+      "line": 13,
+      "rule": "PQ_LIB_SAFE",
+      "note": "MIT‑licensed PQ library",
+      "severity": -2
+    },
+    {
+      "file": "legacy-wallet/qsafe-signer/src/dilithium.js",
+      "line": 2,
+      "rule": "DILITHIUM_SAFE",
+      "note": "Dilithium‑5 post‑quantum signer",
+      "severity": -2
+    },
+    {
+      "file": "legacy-wallet/qsafe-signer/src/dilithium.js",
+      "line": 2,
+      "rule": "PQ_LIB_SAFE",
+      "note": "MIT‑licensed PQ library",
+      "severity": -2
+    }
+  ],
+  "timestamp": "2025-05-12T20:23:12.964Z",
+  "ruleset": "rules.json"
+}
