@@ -6,4 +6,5 @@
 node wallet.js
 # Dilithium‑5 (post‑quantum)
 node wallet.js --alg dilithium
+.
 ```
