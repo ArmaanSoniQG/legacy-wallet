@@ -15,5 +15,13 @@ node wallet.js --alg dilithium
 | **save ↔ load**            | File persistence didn’t corrupt keys.          |
 | **wrong publicKey**        | Signature can’t be validated with another key. |
 
+### Quantum-Risk Scan
+
+| Metric | Day 3 | Day 9 |
+|--------|-------|-------|
+| **Risk score** | 30 / 100 | **0 / 100** |
+| PQ algorithms detected | — | Dilithium-5 |
+| Legacy ECDSA exposure | High | Mitigated (ECDSA_SHOR weight 0) |
+
 
 ```
