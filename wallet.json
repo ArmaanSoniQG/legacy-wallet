@@ -1,0 +1,5 @@
+{
+  "alg": "ecdsa",
+  "publicKey": "-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAExz6y4v4W2pXXxFFwgFFWvPJh13pzU3Y5\nuOpvEjhpqDI0vecoLOK/b0JW577qyNco5NbHm9YaF9v7M/8H1nfqhQ==\n-----END PUBLIC KEY-----\n",
+  "privateKey": "-----BEGIN PRIVATE KEY-----\nMIGEAgEAMBAGByqGSM49AgEGBSuBBAAKBG0wawIBAQQgrQ+3B045/a5zYcKnttCS\n5+t5FNq2YzYdf22sBsi9/tChRANCAATHPrLi/hbaldfEUXCAUVa88mHXenNTdjm4\n6m8SOGmoMjS95ygs4r9vQlbnvurI1yjk1seb1hoX2/sz/wfWd+qF\n-----END PRIVATE KEY-----\n"
+}
