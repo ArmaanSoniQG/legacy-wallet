@@ -1,0 +1,15 @@
+{
+  "name": "@qsafe/wasm-dilithium",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/dilithium.js",
+  "files": [ "dist" ],
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-wasm": "^6.1.4",
+    "rollup": "^4.40.2"
+  }
+}
