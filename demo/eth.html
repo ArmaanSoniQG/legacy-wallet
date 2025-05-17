@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>QSAFE • MetaMask demo</title>
+<link rel="icon" href="data:,">
+<style>
+  body { font: 16px/1.4 system-ui, sans-serif; max-width: 720px; margin: 2rem auto; }
+  button { padding: .4rem 1rem; font-size: 1rem; }
+  #log { background: #111; color:#0f0; padding:1rem; min-height:9rem; white-space:pre-wrap }
+</style>
+
+<h1>🔐 Connect MetaMask → sign → verify</h1>
+
+<p>This uses <code>ethers.js</code> to talk to MetaMask, signs an
+arbitrary message, then verifies the signature in the browser.</p>
+
+<textarea id="msg" style="width:100%" rows="3">Hello from QuantaSeal 👋</textarea><br>
+<button id="connect">🦊 Connect</button>
+<button id="sign" disabled>✍️ Sign</button>
+<button id="check" disabled>✅ Verify</button>
+
+<h3>Status</h3>
+<pre id="log">$ npm run dev:eth …</pre>
+
+<script type="module" src="eth.js"></script>
