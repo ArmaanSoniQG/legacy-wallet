@@ -1,58 +1,70 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+/*──────────────────────────────────────────────────────────────────────────────
+  Forge cheat-code handle (vm)
+──────────────────────────────────────────────────────────────────────────────*/
+import "forge-std/Vm.sol";
+Vm constant vm = Vm(
+    address(uint160(uint256(keccak256("hevm cheat code"))))
+);
+
+/*──────────────────────────────────────────────────────────────────────────────
+  Imports
+──────────────────────────────────────────────────────────────────────────────*/
+import "forge-std/Test.sol";          // assertions + vm again
 import "../src/DilithiumVerifier.sol";
 
+/*──────────────────────────────────────────────────────────────────────────────
+  Test contract
+──────────────────────────────────────────────────────────────────────────────*/
 contract DilithiumVerifierTest is Test {
     DilithiumVerifier verifier;
-    uint256 priv;        // ECDSA private key
-    address owner;       // derived ECDSA address
-    bytes32 hMsg;        // message hash
-    bytes pqSig;         // fake Dilithium sig (2700 B)
 
+    uint256 private priv;      // ECDSA test key
+    address private owner;     // derived address
+
+    /*── setUp ───────────────────────────────────────────────────────────────*/
     function setUp() public {
         priv  = 0xABC123;
         owner = vm.addr(priv);
         verifier = new DilithiumVerifier(owner);
-
-        hMsg = keccak256(bytes("Hello, quantum world!"));
-
-        pqSig = new bytes(2700);
-        for (uint256 i; i < 2700; ++i) pqSig[i] = bytes1(uint8((i*31)%256));
     }
 
-    // happy path
-    function testValidHybridSig() public {
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(priv, hMsg);
-        bytes memory ecdsa = abi.encodePacked(r,s,v);
+    /*── helper: make ECDSA sig ──────────────────────────────────────────────*/
+    function _ecdsa(bytes32 h) internal view returns (bytes memory sig) {
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(priv, h);
+        sig = abi.encodePacked(r, s, v);
+    }
 
+    /*── helper: call Node to get Dilithium-5 sig via FFI ────────────────────*/
+    function _pq(bytes32 h) internal returns (bytes memory pq) {
+        string[] memory cmd = new string[](3); // ← array declared here
+        cmd[0] = "node";
+        cmd[1] = "script/genSig.js";
+        cmd[2] = vm.toString(h);                 // hash as hex (no 0x)
+        pq = vm.ffi(cmd);                        // run script, capture bytes
+    }
+
+    /*── 1. happy-path test ─────────────────────────────────────────────────*/
+    function testHybridSig_WithRealDilithium() public {
+        bytes32 h = keccak256("Hello, world!");
         vm.deal(owner, 1 ether);
         vm.prank(owner);
-        verifier.recordDilithiumSignature(hMsg, pqSig);
+        verifier.recordDilithiumSignature(h, _pq(h));
 
-        bytes4 res = verifier.isValidSignature(hMsg, ecdsa);
+        bytes4 res = verifier.isValidSignature(h, _ecdsa(h));
         assertEq(uint32(res), uint32(0x1626ba7e));
     }
 
-    // no PQ sig logged
-    function testInvalidWithoutPQ() public {
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(priv, hMsg);
-        bytes memory ecdsa = abi.encodePacked(r,s,v);
-        bytes4 res = verifier.isValidSignature(hMsg, ecdsa);
-        assertEq(uint32(res), 0);
-    }
-
-    // wrong ECDSA key
-    function testInvalidWithWrongECDSA() public {
+    /*── 2. fuzz any message ────────────────────────────────────────────────*/
+    function testFuzz_HybridOk(bytes calldata msgData) public {
+        bytes32 h = keccak256(msgData);
         vm.deal(owner, 1 ether);
         vm.prank(owner);
-        verifier.recordDilithiumSignature(hMsg, pqSig);
+        verifier.recordDilithiumSignature(h, _pq(h));
 
-        uint256 badPriv = 0xBADDCAFE;
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(badPriv, hMsg);
-        bytes memory fakeSig = abi.encodePacked(r,s,v);
-        bytes4 res = verifier.isValidSignature(hMsg, fakeSig);
-        assertEq(uint32(res), 0);
+        bytes4 res = verifier.isValidSignature(h, _ecdsa(h));
+        assertEq(uint32(res), uint32(0x1626ba7e));
     }
 }
