@@ -1,0 +1,23 @@
+name: onchain
+
+on:
+  push:
+    paths:
+      - 'quantaseal-onchain/**'
+      - 'scripts/genSig.js'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Install node deps
+        run: npm ci
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with: { version: 'latest' }
+      - name: Run forge tests
+        working-directory: ./quantaseal-onchain
+        run: forge test --ffi
