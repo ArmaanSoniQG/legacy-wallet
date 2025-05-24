@@ -8,17 +8,21 @@
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "build:wasm": "npm run build -w @qsafe/wasm-dilithium && node -e \"require('fs').cpSync('packages/wasm-dilithium/dist/dilithium.js','demo/dilithium.js')\"",
-    "dev": "npx http-server . -c-1 -p 5173 -o /demo/index.html",
-    "dev:eth": "node -e \"require('fs').cpSync('eth.js','demo/eth.js',{force:true})\" && npx http-server . -c-1 -p 5173 -o /eth.html"
+    "dev1": "npx http-server . -c-1 -p 5173 -o /demo/index.html",
+    "dev:eth": "node -e \"require('fs').cpSync('eth.js','demo/eth.js',{force:true})\" && npx http-server . -c-1 -p 5173 -o /eth.html",
+    "dev": "concurrently -k -n UI,API -c green,cyan \"npm --prefix qsafe-ui run dev\" \"node server/signPQ.js\""
   },
   "dependencies": {
     "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",
     "@noble/hashes": "^1.8.0",
     "@noble/post-quantum": "^0.4.1",
+    "concurrently": "8.2.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "ethereumjs-util": "^7.1.5",
     "ethereumjs-wallet": "^1.0.2",
     "ethers": "^6.14.1",
+    "express": "^4.19.2",
     "kyber-crystals": "^1.0.7",
     "yargs": "^17.7.2"
   },
