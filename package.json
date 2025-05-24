@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "qsafe-ui"
   ],
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "build:wasm": "npm run build -w @qsafe/wasm-dilithium && node -e \"require('fs').cpSync('packages/wasm-dilithium/dist/dilithium.js','demo/dilithium.js')\"",
     "dev1": "npx http-server . -c-1 -p 5173 -o /demo/index.html",
     "dev:eth": "node -e \"require('fs').cpSync('eth.js','demo/eth.js',{force:true})\" && npx http-server . -c-1 -p 5173 -o /eth.html",
-    "dev": "concurrently -k -n UI,API -c green,cyan \"npm --prefix qsafe-ui run dev\" \"node server/signPQ.js\""
+    "dev": "npm --prefix qsafe-ui run dev"
   },
   "dependencies": {
     "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",
