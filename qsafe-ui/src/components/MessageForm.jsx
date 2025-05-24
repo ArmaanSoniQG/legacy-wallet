@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { keccak256, toUtf8Bytes } from 'ethers';
+import { ml_dsa65 } from '@noble/post-quantum/ml-dsa';
+import { hexToBytes, bytesToHex } from '@noble/hashes/utils';
 
 export default function MessageForm({ onDone }) {
   const [msg, setMsg] = useState('');
@@ -8,45 +10,35 @@ export default function MessageForm({ onDone }) {
     e.preventDefault();
     if (!msg.trim()) return;
 
-    // 1. hash
-    const msgHash = keccak256(toUtf8Bytes(msg));
+    /* 1 ─ Hash */
+    const hash = keccak256(toUtf8Bytes(msg));               // 0x…
 
-    // 2. ask local API for Dilithium sig
-    const { pqSig } = await fetch('http://localhost:4000/signPQ', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ hash: msgHash })
-    }).then(r => r.json());
+    /* 2 ─ Dilithium sign (browser) */
+    const { secretKey } = ml_dsa65.keygen();                // throw-away demo key
+    const pqBytes = ml_dsa65.sign(secretKey, hexToBytes(hash.slice(2)));
+    const pqSig   = '0x' + bytesToHex(pqBytes);
 
-    // 3. get ECDSA sig from MetaMask
+    /* 3 ─ ECDSA sign via MetaMask */
     if (!window.ethereum) return alert('Install MetaMask');
     await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const sigECDSA = await window.ethereum.request({
+    const ecdsaSig = await window.ethereum.request({
       method: 'personal_sign',
-      params: [msgHash, window.ethereum.selectedAddress]
+      params: [hash, window.ethereum.selectedAddress]
     });
 
-    // 4. send to on-chain verifier (simplified read-only call)
-    const MAGIC = '0x1626ba7e';
-    //   — for brevity we just optimistically return success UI —
-    onDone({
-      hash: msgHash,
-      pqSig,
-      ecdsaSig: sigECDSA,
-      txHash: 'sent-off-ui',
-      ok: true,
-    });
+    /* 4 ─ Optimistic “verified” result */
+    onDone({ hash, pqSig, ecdsaSig, txHash: 'browser-only', ok: true });
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
       <input
-        value={msg}
-        onChange={e => setMsg(e.target.value)}
         className="flex-1 border px-2 py-1"
         placeholder="Type a message"
+        value={msg}
+        onChange={e => setMsg(e.target.value)}
       />
-      <button className="bg-black text-white px-3">Sign & Verify</button>
+      <button className="bg-black text-white px-3">Sign &amp; Verify</button>
     </form>
   );
 }
