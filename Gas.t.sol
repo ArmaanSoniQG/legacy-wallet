@@ -20,8 +20,9 @@ contract Gas is Test {
 
     /* -------- hybrid path -------- */
     function testGas_Hybrid() public {
-        bytes memory sig = hex"";                // empty ⇒ fail ECDSA, but pass Dilithium branch
-        v.recordDilithiumSignature(h, bytes32(0));
-        v.isValidSignature(h, sig);
+        bytes memory emptySig = "";              // empty ⇒ ECDSA fails
+        bytes memory pqSig   = new bytes(32);    // 32 zero-bytes
+        v.recordDilithiumSignature(h, pqSig);
+        v.isValidSignature(h, emptySig);
     }
 }
