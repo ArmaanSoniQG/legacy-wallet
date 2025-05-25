@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import RegisterPQ from './components/RegisterPQ.jsx';
 import MessageForm from './components/MessageForm.jsx';
-import ResultCard  from './components/ResultCard.jsx';
+import ResultCard from './components/ResultCard.jsx';
+import { useState } from 'react';
 
 export default function App() {
-  const [result, setResult] = useState(null);
+  const [res, setRes] = useState(null);
   return (
-    <div className="max-w-2xl mx-auto p-6 font-mono">
+    <div className="max-w-xl mx-auto p-6 font-mono">
       <h1 className="text-2xl mb-4">QuantaSeal Hybrid Demo</h1>
-      <MessageForm onDone={setResult} />
-      {result && <ResultCard {...result} />}
+      <RegisterPQ />
+      <MessageForm onDone={setRes} />
+      {res && <ResultCard {...res} />}
     </div>
   );
 }

@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { keccak256, toUtf8Bytes, BrowserProvider, Contract } from 'ethers';
+import {
+  keccak256,
+  toUtf8Bytes,
+  BrowserProvider,
+  Contract
+} from 'ethers';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa';
 import { hexToBytes, bytesToHex } from '@noble/hashes/utils';
 import { VERIFIER_ADDR, ABI } from '../contract.js';
+import { deriveSeed } from '../seed.js';
 
 export default function MessageForm({ onDone }) {
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg]   = useState('');
   const [busy, setBusy] = useState(false);
 
   async function handleSubmit(e) {
@@ -14,40 +20,42 @@ export default function MessageForm({ onDone }) {
     setBusy(true);
 
     try {
-      /* 1 ─ Hash */
-      const hash = keccak256(toUtf8Bytes(msg)); // 0x-hex32
+      /* 1 ─ hash */
+      const hash = keccak256(toUtf8Bytes(msg));
 
-      /* 2 ─ Dilithium sig (browser) */
-      const { secretKey } = ml_dsa65.keygen();
-      const pqBytes = ml_dsa65.sign(secretKey, hexToBytes(hash.slice(2)));
-      const pqSig   = '0x' + bytesToHex(pqBytes);
-
-      /* 3 ─ Connect MetaMask */
+      /* 2 ─ deterministic Dilithium sig */
       if (!window.ethereum) throw new Error('MetaMask not found');
       const provider = new BrowserProvider(window.ethereum);
       const signer   = await provider.getSigner();
       const addr     = await signer.getAddress();
 
-      /* 4 ─ Broadcast PQ sig */
+      const seed     = hexToBytes((await deriveSeed(addr)).slice(2));
+      const { secretKey } = ml_dsa65.keygen(seed);           // <─ changed
+      const pqSig = '0x' + bytesToHex(
+        ml_dsa65.sign(secretKey, hexToBytes(hash.slice(2)))
+      );
+
+      /* 3 ─ send PQ sig */
       const verifier = new Contract(VERIFIER_ADDR, ABI, signer);
       const tx1      = await verifier.recordDilithiumSignature(hash, pqSig);
-      const receipt1 = await tx1.wait();
+      await tx1.wait(1);
 
-      /* 5 ─ Raw ECDSA sig (no "\x19Ethereum Signed Message" prefix) */
+      /* 4 ─ raw ECDSA sig */
       const ecdsaSig = await window.ethereum.request({
         method: 'personal_sign',
         params: [hash, addr]
       });
 
-      /* 6 ─ Call isValidSignature */
+      /* 5 ─ verify */
       const magic = await verifier.isValidSignature(hash, ecdsaSig);
       const ok    = magic === '0x1626ba7e';
 
-      /* 7 ─ Show result */
+      /* 6 ─ UI */
       onDone({
-        hash, pqSig,
+        hash,
+        pqSig:    pqSig.slice(0, 34)  + '…',
         ecdsaSig: ecdsaSig.slice(0, 66) + '…',
-        txHash: receipt1.transactionHash,
+        txHash:   tx1.hash,
         ok
       });
     } catch (err) {
@@ -69,7 +77,9 @@ export default function MessageForm({ onDone }) {
       <button
         className="bg-black text-white px-3"
         disabled={busy}
-      >{busy ? 'Waiting…' : 'Sign & Verify'}</button>
+      >
+        {busy ? 'Waiting…' : 'Sign & Verify'}
+      </button>
     </form>
   );
 }

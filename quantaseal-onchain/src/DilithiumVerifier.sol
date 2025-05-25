@@ -41,7 +41,12 @@ contract DilithiumVerifier is IERC1271 {
             v := byte(0, mload(add(sig, 0x60)))
         }
         if (v < 27) v += 27;
-        if (ecrecover(hash, v, r, s) != ownerECDSA) return 0x00000000;
+
+        bytes32 ethHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
+        );
+
+        if (ecrecover(ethHash, v, r, s) != ownerECDSA) return 0x00000000;
 
         if (pqSigHash[hash] == bytes32(0)) return 0x00000000;
 
