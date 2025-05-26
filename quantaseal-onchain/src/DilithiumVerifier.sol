@@ -9,11 +9,12 @@ interface IERC1271 {
 }
 
 contract DilithiumVerifier is IERC1271 {
-    bytes4 internal constant MAGIC = 0x1626ba7e; // EIP-1271 success code
+    bytes4 public constant MAGIC = 0x1626ba7e; // EIP-1271 success code
     address public immutable ownerECDSA;
 
-    // messageHash => keccak256(Dilithium signature bytes)
-    mapping(bytes32 => bytes32) private pqSigHash;
+    
+    // messageHash => registered?   (keccak == true)
+    mapping(bytes32 => bool) private pqSigSeen;
 
     event PQSignatureRecorded(bytes32 indexed msgHash, bytes32 pqHash);
 
@@ -25,8 +26,9 @@ contract DilithiumVerifier is IERC1271 {
     // Owner (ECDSA address) logs the Dilithium signature hash on-chain
     function recordDilithiumSignature(bytes32 msgHash, bytes calldata pqSig) external {
         require(msg.sender == ownerECDSA, "not owner");
+
         bytes32 h = keccak256(pqSig);
-        pqSigHash[msgHash] = h;
+        pqSigSeen[msgHash] = true;
         emit PQSignatureRecorded(msgHash, h);
     }
 
@@ -48,7 +50,7 @@ contract DilithiumVerifier is IERC1271 {
 
         if (ecrecover(ethHash, v, r, s) != ownerECDSA) return 0x00000000;
 
-        if (pqSigHash[hash] == bytes32(0)) return 0x00000000;
+        if (!pqSigSeen[hash]) return 0x00000000;
 
         return MAGIC;
     }

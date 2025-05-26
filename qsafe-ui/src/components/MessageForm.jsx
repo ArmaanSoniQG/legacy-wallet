@@ -1,16 +1,43 @@
+// qsafe-ui/src/components/MessageForm.jsx
 import { useState } from 'react';
 import {
   keccak256,
   toUtf8Bytes,
   BrowserProvider,
-  Contract
+  Contract,
 } from 'ethers';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa';
 import { hexToBytes, bytesToHex } from '@noble/hashes/utils';
-import { VERIFIER_ADDR, ABI } from '../contract.js';
-import { deriveSeed } from '../seed.js';
 
+import { VERIFIER_ADDR as FALLBACK, ABI } from '../contract.js'; // alias the hard-coded addr
+import { deriveSeed } from '../seed.js';
+import DeployWallet from './DeployWallet.jsx';
+
+/* ──────────────────────────────────────────────
+   Component: MessageForm
+   • If the user hasn’t deployed a DilithiumVerifier yet,
+     we show <DeployWallet /> instead of the form.
+   • Otherwise we let them “Sign & Verify”.
+────────────────────────────────────────────── */
 export default function MessageForm({ onDone }) {
+  // ① Which verifier contract should we talk to?
+  const [verifierAddr, setVerifierAddr] = useState(
+    localStorage.getItem('verifierAddr') ?? FALLBACK
+  );
+
+  // First-time visitor?  Prompt them to deploy a verifier.
+  if (!verifierAddr) {
+    return (
+      <DeployWallet
+        onReady={addr => {
+          localStorage.setItem('verifierAddr', addr);
+          setVerifierAddr(addr);
+        }}
+      />
+    );
+  }
+
+  // ② Normal “Sign & Verify” UI
   const [msg, setMsg]   = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -20,46 +47,45 @@ export default function MessageForm({ onDone }) {
     setBusy(true);
 
     try {
-      /* 1 ─ hash */
-      const hash = keccak256(toUtf8Bytes(msg));
+      /* 1 ─ Hash the message */
+      const hash = keccak256(toUtf8Bytes(msg)); // 0x-prefixed 32-byte digest
 
-      /* 2 ─ deterministic Dilithium sig */
+      /* 2 ─ Deterministic Dilithium signature (seeded from wallet addr) */
       if (!window.ethereum) throw new Error('MetaMask not found');
       const provider = new BrowserProvider(window.ethereum);
       const signer   = await provider.getSigner();
       const addr     = await signer.getAddress();
 
-      const seed     = hexToBytes((await deriveSeed(addr)).slice(2));
-      const { secretKey } = ml_dsa65.keygen(seed);           // <─ changed
-      const pqSig = '0x' + bytesToHex(
-        ml_dsa65.sign(secretKey, hexToBytes(hash.slice(2)))
-      );
+      const seed            = hexToBytes((await deriveSeed(addr)).slice(2));
+      const { secretKey }   = ml_dsa65.keygen(seed);
+      const pqBytes         = ml_dsa65.sign(secretKey, hexToBytes(hash.slice(2)));
+      const pqSig           = '0x' + bytesToHex(pqBytes);
 
-      /* 3 ─ send PQ sig */
-      const verifier = new Contract(VERIFIER_ADDR, ABI, signer);
+      /* 3 ─ Write the PQ sig on-chain */
+      const verifier = new Contract(verifierAddr, ABI, signer);
       const tx1      = await verifier.recordDilithiumSignature(hash, pqSig);
       await tx1.wait(1);
 
-      /* 4 ─ raw ECDSA sig */
+      /* 4 ─ Raw ECDSA signature (un-prefixed) */
       const ecdsaSig = await window.ethereum.request({
-        method: 'personal_sign',
-        params: [hash, addr]
+        method: 'personal_sign',   // MetaMask returns r|s|v
+        params: [hash, addr],      // (digest, signer)
       });
 
-      /* 5 ─ verify */
+      /* 5 ─ Hybrid verification via EIP-1271 */
       const magic = await verifier.isValidSignature(hash, ecdsaSig);
       const ok    = magic === '0x1626ba7e';
 
-      /* 6 ─ UI */
+      /* 6 ─ Bubble result up to <App> */
       onDone({
         hash,
         pqSig:    pqSig.slice(0, 34)  + '…',
         ecdsaSig: ecdsaSig.slice(0, 66) + '…',
         txHash:   tx1.hash,
-        ok
+        ok,
       });
     } catch (err) {
-      alert(err.message ?? err);
+      alert(err.message ?? String(err));
     } finally {
       setBusy(false);
     }
