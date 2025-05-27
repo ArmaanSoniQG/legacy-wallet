@@ -32,6 +32,8 @@ contract FactoryFlowTest is Test {
         /* 2 ─ deploy verifier */
         vm.prank(owner);
         verifier = factory.deploy();
+       // assertEq(verifier.MAGIC(), 0x1626ba7e);
+
 
         /* 3 ─ factory bookkeeping checks */
         assertEq(factory.verifierOf(owner), address(verifier));
