@@ -1,44 +1,27 @@
 // qsafe-ui/src/components/MessageForm.jsx
 import { useState } from 'react';
 import {
-  keccak256,
-  toUtf8Bytes,
-  BrowserProvider,
-  Contract,
+  keccak256, toUtf8Bytes,
+  BrowserProvider, Contract,
 } from 'ethers';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa';
 import { hexToBytes, bytesToHex } from '@noble/hashes/utils';
 
-import { VERIFIER_ADDR as FALLBACK, ABI } from '../contract.js'; // alias the hard-coded addr
+import { ABI, VERIFIER_ADDR as FALLBACK } from '../contract.js';
 import { deriveSeed } from '../seed.js';
-import DeployWallet from './DeployWallet.jsx';
 
-/* ──────────────────────────────────────────────
-   Component: MessageForm
-   • If the user hasn’t deployed a DilithiumVerifier yet,
-     we show <DeployWallet /> instead of the form.
-   • Otherwise we let them “Sign & Verify”.
+/* ───────────────────────────────────────────────
+   MessageForm
+   • expects `verifierAddr` prop (null until wallet exists)
+   • emits { hash, pqSig, ecdsaSig, txHash, ok } via `onDone`
 ────────────────────────────────────────────── */
-export default function MessageForm({ onDone }) {
-  // ① Which verifier contract should we talk to?
-  const [verifierAddr, setVerifierAddr] = useState(
-    localStorage.getItem('verifierAddr') ?? FALLBACK
-  );
+export default function MessageForm({ verifierAddr, onDone }) {
+  /* If the user hasn't deployed a wallet yet we render nothing.
+     (App shows the blue "Create my QuantaSeal Wallet" button instead.) */
+  const addr = verifierAddr ?? FALLBACK;
+  if (!addr) return null;
 
-  // First-time visitor?  Prompt them to deploy a verifier.
-  if (!verifierAddr) {
-    return (
-      <DeployWallet
-        onReady={addr => {
-          localStorage.setItem('verifierAddr', addr);
-          setVerifierAddr(addr);
-        }}
-      />
-    );
-  }
-
-  // ② Normal “Sign & Verify” UI
-  const [msg, setMsg]   = useState('');
+  const [msg,  setMsg]  = useState('');
   const [busy, setBusy] = useState(false);
 
   async function handleSubmit(e) {
@@ -47,36 +30,36 @@ export default function MessageForm({ onDone }) {
     setBusy(true);
 
     try {
-      /* 1 ─ Hash the message */
-      const hash = keccak256(toUtf8Bytes(msg)); // 0x-prefixed 32-byte digest
+      /* 1 - hash the message */
+      const hash = keccak256(toUtf8Bytes(msg));        // 0x-prefixed
 
-      /* 2 ─ Deterministic Dilithium signature (seeded from wallet addr) */
+      /* 2 - deterministic Dilithium sig */
       if (!window.ethereum) throw new Error('MetaMask not found');
       const provider = new BrowserProvider(window.ethereum);
       const signer   = await provider.getSigner();
-      const addr     = await signer.getAddress();
+      const userAddr = await signer.getAddress();
 
-      const seed            = hexToBytes((await deriveSeed(addr)).slice(2));
-      const { secretKey }   = ml_dsa65.keygen(seed);
-      const pqBytes         = ml_dsa65.sign(secretKey, hexToBytes(hash.slice(2)));
-      const pqSig           = '0x' + bytesToHex(pqBytes);
+      const seed          = hexToBytes((await deriveSeed(userAddr)).slice(2));
+      const { secretKey } = ml_dsa65.keygen(seed);
+      const pqSigBytes    = ml_dsa65.sign(secretKey, hexToBytes(hash.slice(2)));
+      const pqSig         = '0x' + bytesToHex(pqSigBytes);
 
-      /* 3 ─ Write the PQ sig on-chain */
-      const verifier = new Contract(verifierAddr, ABI, signer);
+      /* 3 - store PQ sig on-chain */
+      const verifier = new Contract(addr, ABI, signer);
       const tx1      = await verifier.recordDilithiumSignature(hash, pqSig);
       await tx1.wait(1);
 
-      /* 4 ─ Raw ECDSA signature (un-prefixed) */
+      /* 4 - raw ECDSA sig */
       const ecdsaSig = await window.ethereum.request({
-        method: 'personal_sign',   // MetaMask returns r|s|v
-        params: [hash, addr],      // (digest, signer)
+        method: 'personal_sign',
+        params: [hash, userAddr],
       });
 
-      /* 5 ─ Hybrid verification via EIP-1271 */
+      /* 5 - hybrid verify via ERC-1271 */
       const magic = await verifier.isValidSignature(hash, ecdsaSig);
       const ok    = magic === '0x1626ba7e';
 
-      /* 6 ─ Bubble result up to <App> */
+      /* 6 - bubble up to App */
       onDone({
         hash,
         pqSig:    pqSig.slice(0, 34)  + '…',

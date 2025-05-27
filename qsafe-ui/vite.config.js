@@ -9,6 +9,7 @@ import { NodeModulesPolyfillPlugin }  from '@esbuild-plugins/node-modules-polyfi
 
 export default defineConfig({
   plugins: [react()],
+  build: {sourcemap: true},
 
   /* Tell Vite/ESBuild to inject Buffer, process, and stub core libs */
   optimizeDeps: {
