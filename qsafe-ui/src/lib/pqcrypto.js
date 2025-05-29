@@ -1,53 +1,58 @@
+// ----------------------------- pqcrypto.js -----------------------------
+// Wraps dilithium-crystals v1.0.6  (works in browser)
+
+import { dilithium } from 'dilithium-crystals';
+import {
+  ethers,
+  AbiCoder,
+  keccak256,
+}                      from 'ethers';
+
+let readyP;
+async function ready() {
+  readyP ||= (async () => { await dilithium.ready; return dilithium; })();
+  return readyP;
+}
+
+/* ---------- Dilithium API ---------- */
 /**
- * pqcrypto.js  –  Day 26 single source-of-truth for PQ operations
- * NOTE: uses placeholder 'dilithium-wasm' lib.  Replace with the library
- * you actually compiled (e.g., @openquantum/dilithium or your own build).
- */
-
-import * as dilithium from 'dilithium-wasm'; // <- swap to real lib
-
-// ---------- 1.  Key generation ---------- //
-export async function generateKeyPair(algo = 'Dilithium') {
-  if (algo !== 'Dilithium') throw new Error(`algo ${algo} unimplemented`);
-
-  const { publicKey, privateKey } = await dilithium.keyPair();
++ * mode = 'dilithium3' | 'dilithium5'
++ * (library recognises these names – check its README)
++ */
+export async function generateKeyPair(mode = 'dilithium5') {
+  const d = await ready();
+  const { publicKey, privateKey } = await d.keyPair({ mode });
   return { publicKey, privateKey };
 }
 
-// ---------- 2.  Signing ---------- //
-export async function sign(priv, messageBytes, algo = 'Dilithium') {
-  if (algo !== 'Dilithium') throw new Error(`algo ${algo} unimplemented`);
-
-  return dilithium.sign(messageBytes, priv);
+export async function sign(priv, msgBytes) {
+  const d = await ready();
+  return d.signDetached(msgBytes, priv);  // Uint8Array sig
+}
+export async function verify(pub, msgBytes, sig) {
+  const d = await ready();
+  return d.verifyDetached(sig, msgBytes, pub);
 }
 
-// ---------- 3.  Verification ---------- //
-export async function verify(algo, pub, msgBytes, sig) {
-  if (algo !== 'Dilithium') return false;            // stub for future algos
-  return dilithium.verify(sig, msgBytes, pub);
-}
+/* ---------- Contract-hash helpers ---------- */
+const coder = new AbiCoder();
 
-// ---------- 4.  Helpers to build messages ---------- //
-import { ethers } from 'ethers';
+export const createRegisterMsg = (wallet, owner) =>
+  ethers.solidityPackedKeccak256(['address', 'address'], [wallet, owner]);
 
-// message for key-registration proof (binds key to wallet + owner)
-export function createRegisterMessage(contractAddr, ownerAddr) {
-  return ethers.solidityPackedKeccak256(
-    ['address', 'address'],
-    [contractAddr, ownerAddr]
+export const createTxMsg = (wallet, to, value, data, nonce) =>
+  keccak256(
+    coder.encode(
+      ['address','address','uint256','bytes32','uint256'],
+      [wallet,   to,       value,    keccak256(data),      nonce]
+    )
   );
-}
 
-// message for executeTransaction (mirrors wallet contract!)
-export function createTxMessage(contractAddr, to, value, data, nonce) {
-  return ethers.solidityPackedKeccak256(
-    ['address', 'address', 'uint256', 'bytes32', 'uint256'],
-    [contractAddr, to, value, ethers.keccak256(data), nonce]
-  );
-}
+/* ---------- Browser-safe hex helpers ---------- */
+const toHex = (bytes) =>
+  Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 
-// ---------- 5.  Pretty print truncation ---------- //
-export function formatPubKey(bytes) {
-  const hex = Buffer.from(bytes).toString('hex');
+export const fmt = (bytes) => {
+  const hex = toHex(bytes);
   return `0x${hex.slice(0, 12)}…${hex.slice(-12)}`;
-}
+};

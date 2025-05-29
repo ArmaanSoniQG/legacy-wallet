@@ -1,75 +1,107 @@
 import React, { useState, useContext } from 'react';
-import { EthereumContext } from '../context/EthereumContext';
+import { EthereumContext } from '../context/EthereumContext.jsx';
 import {
   generateKeyPair,
   sign,
-  formatPubKey,
-  createRegisterMessage
+  verify,
+  fmt,
+  createRegisterMsg
 } from '../lib/pqcrypto';
+import { ethers } from 'ethers';
 
-export default function RegisterPQKey() {
-  const { contract, userAddress } = useContext(EthereumContext);
-  const [pair, setPair]           = useState(null);
-  const [busy, setBusy]           = useState(false);
-  const [msg,  setMsg]            = useState('');
+/* choose Dilithium parameter set the contract expects */
+const ALGO_ID = 0;             // Dilithium enum value
+const PARAM   = 'dilithium5';  // change if contract wants dilithium3 etc.
 
-  // ---- 1. Generate Dilithium key pair ----
+export default function RegisterPQKey({ onReady, disabled }) {
+  const { contract, user } = useContext(EthereumContext);
+
+  const [pair, setPair] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [log,  setLog]  = useState('');
+
+  /* ------------ helpers ------------ */
   const gen = async () => {
-    setBusy(true); setMsg('Generating Dilithium key…');
     try {
-      const kp = await generateKeyPair('Dilithium');
+      setBusy(true); setLog('generating key…');
+      const kp = await generateKeyPair(PARAM);       // param set explicit
       setPair(kp);
-      setMsg(`Key generated: ${formatPubKey(kp.publicKey)}`);
-    } catch (e) {
-      setMsg(`❌ failed: ${e.message}`);
+      setLog(`key: ${fmt(kp.publicKey)}`);
+      onReady?.(kp.privateKey);
     } finally { setBusy(false); }
   };
 
-  // ---- 2. Register on-chain ----
-  const reg = async () => {
+  const register = async () => {
     if (!pair) return;
 
-    setBusy(true); setMsg('Signing proof…');
     try {
-      const proof = await sign(
-        pair.privateKey,
-        createRegisterMessage(contract.address, userAddress),
-        'Dilithium'
-      );
+      setBusy(true); setLog('signing proof…');
+      const msgHash = createRegisterMsg(contract.target, user); // owner,wallet
+      const sig     = await sign(pair.privateKey, msgHash);
 
-      setMsg('Sending tx…');
-      const tx = await contract.registerPQKey(
-        1,               // Algorithm.Dilithium
-        pair.publicKey,
-        proof
-      );
+      /* sanity-check locally */
+      if (!(await verify(pair.publicKey, msgHash, sig))) {
+        throw new Error('local Dilithium verify failed');
+      }
+
+      const pubHex = ethers.hexlify(pair.publicKey);
+      const sigHex = ethers.hexlify(sig);
+
+      console.log(
+  'Dilithium pub-len:', pair.publicKey.length,
+  'sig-len:',          sig.length
+);
+
+      /* ---------- dry-run with callStatic ---------- */
+      setLog('static-calling to capture revert…');
+      try {
+  await contract.registerPQKey.staticCall(ALGO_ID, pubHex, sigHex);
+} catch (e) {
+  console.error('Raw revert data:', e.data);
+  if (e.errorName) console.error('Custom error:', e.errorName);
+  throw new Error('contract reverted - see console for raw data');
+}
+
+
+      /* ---------- real tx ---------- */
+      setLog('sending tx…');
+      const tx = await contract.registerPQKey(ALGO_ID, pubHex, sigHex);
       await tx.wait();
-      setMsg('✅ key registered!');
+      setLog('✅ registered!');
     } catch (e) {
-      setMsg(`❌ tx failed: ${e.reason || e.message}`);
+      setLog(`❌ ${e.message}`);
     } finally { setBusy(false); }
   };
 
+  /* ------------ UI ------------ */
   return (
-    <section className="card p-4">
-      <h3 className="text-xl mb-2">Step 1 · Register Quantum Key</h3>
+    <section className="card p-4 space-y-2">
+      <h3 className="text-lg font-semibold">Step 1 · Quantum Key</h3>
 
       {!pair && (
-        <button disabled={busy} onClick={gen} className="btn btn-secondary">
-          {busy ? 'Please wait…' : 'Generate PQ Key'}
+        <button
+          className="btn btn-secondary"
+          disabled={busy || disabled || !contract}
+          onClick={gen}
+        >
+          {busy ? 'please wait…' : 'Generate key'}
         </button>
       )}
 
       {pair && (
         <>
-          <p className="mb-2">PubKey: {formatPubKey(pair.publicKey)}</p>
-          <button disabled={busy} onClick={reg} className="btn btn-primary">
-            {busy ? 'Registering…' : 'Register on chain'}
+          <p>pub: {fmt(pair.publicKey)}</p>
+          <button
+            className="btn btn-primary"
+            disabled={busy || disabled}
+            onClick={register}
+          >
+            {busy ? 'pending…' : 'Register on chain'}
           </button>
         </>
       )}
 
-      {msg && <p className="mt-3 italic">{msg}</p>}
+      {log && <p className="text-sm italic break-all">{log}</p>}
     </section>
   );
 }
