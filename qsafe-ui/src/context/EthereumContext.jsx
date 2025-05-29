@@ -1,48 +1,82 @@
-/**
- * EthereumContext – exposes:
- *   { provider, signer, contract, userAddress }
- *
- * Expects .env to define VITE_WALLET_ADDRESS & VITE_RPC_URL.
- */
-
+// qsafe-ui/src/context/EthereumContext.jsx
 import React, { createContext, useEffect, useState } from 'react';
-import { BrowserProvider, Contract } from 'ethers';
-import walletABI from '../abi/HybridWallet.json';
+import {
+  BrowserProvider,
+  Contract,
+  ethers,
+  ZeroAddress,          // <-- must import
+} from 'ethers';
+
+import factoryArtifact from '../abi/HybridWalletFactory.json';
+import walletArtifact  from '../abi/HybridWallet.json';
 
 export const EthereumContext = createContext(null);
 
+/* ---------- constants & runtime sanity ---------- */
+const FACTORY = import.meta.env.VITE_FACTORY_ADDRESS?.toLowerCase();
+
+if (!FACTORY || FACTORY === '0x' || FACTORY === ZeroAddress) {
+  // eslint-disable-next-line no-alert
+  alert(
+    'VITE_FACTORY_ADDRESS is missing or zero.\n' +
+    '1) Did you deploy the factory WITH --broadcast?\n' +
+    '2) Did you copy its address into qsafe-ui/.env ?'
+  );
+}
+
+/* ---------- provider component ---------- */
 export const EthereumProvider = ({ children }) => {
-  const [provider, setProvider]     = useState(null);
-  const [signer, setSigner]         = useState(null);
-  const [contract, setContract]     = useState(null);
-  const [userAddress, setUserAddr]  = useState(null);
+  const [state, setState] = useState({
+    provider: null,
+    signer:   null,
+    contract: null,
+    user:     null,
+    ready:    false,
+  });
 
-  // 1. bootstrap provider from window.ethereum
+  /* one-shot MetaMask connect */
+  const connect = async () => {
+    if (!window.ethereum) {
+      alert('No MetaMask / EVM wallet detected'); return;
+    }
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+    const prov   = new BrowserProvider(window.ethereum);
+    const signer = await prov.getSigner();
+    const user   = await signer.getAddress();
+
+    /* factory instance */
+    const factory = new Contract(FACTORY, factoryArtifact.abi, signer);
+
+    /* fetch / create personal HybridWallet */
+    let walletAddr = await factory.walletOf(user);
+    if (walletAddr === ZeroAddress) {
+      console.log('[QuantaSeal] first connect → creating wallet…');
+      const tx  = await factory.createWallet();   // MetaMask pops here
+      const rc  = await tx.wait();
+      walletAddr = rc.logs[0].args.wallet;
+    }
+
+    const wallet = new Contract(walletAddr, walletArtifact.abi, signer);
+
+    setState({
+      provider: prov,
+      signer,
+      contract: wallet,
+      user,
+      ready: true,
+    });
+  };
+
+  /* auto-connect if already authorised */
   useEffect(() => {
-    if (!window.ethereum) return;
-    const prov = new BrowserProvider(window.ethereum);
-    setProvider(prov);
-
-    const handleAccounts = async () => {
-      const s = await prov.getSigner();
-      setSigner(s);
-      setUserAddr(await s.getAddress());
-      const c = new Contract(
-        import.meta.env.VITE_WALLET_ADDRESS,
-        walletABI,
-        s
-      );
-      setContract(c);
-    };
-
-    window.ethereum.on('accountsChanged', handleAccounts);
-    handleAccounts();
-
-    return () => window.ethereum.removeListener('accountsChanged', handleAccounts);
+    if (window.ethereum?.selectedAddress) connect();
+    window.ethereum?.on('accountsChanged', () => window.location.reload());
+    return () => window.ethereum?.removeListener('accountsChanged', () => {});
   }, []);
 
   return (
-    <EthereumContext.Provider value={{ provider, signer, contract, userAddress }}>
+    <EthereumContext.Provider value={{ ...state, connect }}>
       {children}
     </EthereumContext.Provider>
   );

@@ -1,5 +1,5 @@
 {
-  "name": "@qsafe/wasm-dilithium",
+  "name": "wasm-dilithium",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/dilithium.js",
