@@ -1,0 +1,1 @@
+../../../release/build/risc0-zkvm-sys-2dcbd0a974c104db/out/cxxbridge/sources/risc0/zkvm/lib.rs.cc

@@ -1,0 +1,159 @@
+cargo:CXXBRIDGE_PREFIX=risc0\zkp
+cargo:CXXBRIDGE_LINKS=risc0-zkp-sys
+cargo:CXXBRIDGE_DIR0=C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\include
+cargo:CXXBRIDGE_DIR1=C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate
+cargo:CXXBRIDGE_DIR2=C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-core-sys-6e80b16aa9dc2cf3\out\cxxbridge\include
+cargo:CXXBRIDGE_DIR3=C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-core-sys-6e80b16aa9dc2cf3\out\cxxbridge\crate
+OUT_DIR = Some(C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out)
+OPT_LEVEL = Some(0)
+TARGET = Some(aarch64-pc-windows-msvc)
+cargo:rerun-if-env-changed=VCINSTALLDIR
+VCINSTALLDIR = None
+cargo:rerun-if-env-changed=VSTEL_MSBuildProjectFullPath
+VSTEL_MSBuildProjectFullPath = None
+cargo:rerun-if-env-changed=VSCMD_ARG_VCVARS_SPECTRE
+VSCMD_ARG_VCVARS_SPECTRE = None
+cargo:rerun-if-env-changed=WindowsSdkDir
+WindowsSdkDir = None
+cargo:rerun-if-env-changed=WindowsSDKVersion
+WindowsSDKVersion = None
+cargo:rerun-if-env-changed=LIB
+LIB = None
+PATH = Some(C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\deps;C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release;C:\Users\armaa\bin;C:\Program Files\Git\clangarm64\bin;C:\Program Files\Git\usr\local\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\clangarm64\bin;C:\Program Files\Git\usr\bin;C:\Users\armaa\bin;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0;C:\windows\System32\OpenSSH;C:\Program Files\HP\HP One Agent;C:\Program Files\dotnet;C:\Program Files\HP\1E.Performance.Assist\Extensibility\NomadBranch;C:\Program Files\nodejs;C:\Program Files\Git\cmd;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0;C:\windows\System32\OpenSSH;C:\Program Files\HP\HP One Agent;C:\Program Files\dotnet;C:\Program Files\HP\1E.Performance.Assist\Extensibility\NomadBranch;C:\Program Files\nodejs;C:\Program Files\Git\cmd;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit;C:\Program Files\LLVM\bin;C:\Users\armaa\.cargo\bin;C:\Users\armaa\.foundry\bin;C:\Program Files\nodejs;C:\Program Files\7-Zip;C:\Users\armaa\.rustup\toolchains\stable-aarch64-pc-windows-msvc\bin;C:\Program Files\Git\cmd;C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64;C:\Users\armaa\Downloads\riscv32im-linux-x86_64\bin;C:\Program Files\Git\usr\bin\vendor_perl;C:\Program Files\Git\usr\bin\core_perl;C:\Users\armaa\.foundry\bin;C:\Users\armaa\.rustup\toolchains\nightly-aarch64-pc-windows-msvc\bin)
+cargo:rerun-if-env-changed=INCLUDE
+INCLUDE = None
+HOST = Some(aarch64-pc-windows-msvc)
+cargo:rerun-if-env-changed=CXX_aarch64-pc-windows-msvc
+CXX_aarch64-pc-windows-msvc = None
+cargo:rerun-if-env-changed=CXX_aarch64_pc_windows_msvc
+CXX_aarch64_pc_windows_msvc = None
+cargo:rerun-if-env-changed=HOST_CXX
+HOST_CXX = None
+cargo:rerun-if-env-changed=CXX
+CXX = None
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+CARGO_CFG_TARGET_FEATURE = Some(neon)
+DEBUG = Some(false)
+cargo:rerun-if-env-changed=CXXFLAGS
+CXXFLAGS = None
+cargo:rerun-if-env-changed=HOST_CXXFLAGS
+HOST_CXXFLAGS = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64_pc_windows_msvc
+CXXFLAGS_aarch64_pc_windows_msvc = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64-pc-windows-msvc
+CXXFLAGS_aarch64-pc-windows-msvc = None
+CARGO_ENCODED_RUSTFLAGS = Some()
+OUT_DIR = Some(C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out)
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+TARGET = Some(aarch64-pc-windows-msvc)
+CARGO_CFG_TARGET_FEATURE = Some(neon)
+HOST = Some(aarch64-pc-windows-msvc)
+cargo:rerun-if-env-changed=CXXFLAGS
+CXXFLAGS = None
+cargo:rerun-if-env-changed=HOST_CXXFLAGS
+HOST_CXXFLAGS = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64_pc_windows_msvc
+CXXFLAGS_aarch64_pc_windows_msvc = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64-pc-windows-msvc
+CXXFLAGS_aarch64-pc-windows-msvc = None
+OUT_DIR = Some(C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out)
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+TARGET = Some(aarch64-pc-windows-msvc)
+CARGO_CFG_TARGET_FEATURE = Some(neon)
+HOST = Some(aarch64-pc-windows-msvc)
+cargo:rerun-if-env-changed=CXXFLAGS
+CXXFLAGS = None
+cargo:rerun-if-env-changed=HOST_CXXFLAGS
+HOST_CXXFLAGS = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64_pc_windows_msvc
+CXXFLAGS_aarch64_pc_windows_msvc = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64-pc-windows-msvc
+CXXFLAGS_aarch64-pc-windows-msvc = None
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+lib.rs.cc
+impl.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+ntt.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+poly.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+sha_rng.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(310): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(310): note: the template instantiation context (the oldest one first) is
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(678): note: see reference to class template instantiation 'std::basic_ostream<char,std::char_traits<char>>' being compiled
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(303): note: while compiling class template member function 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(unsigned int)'
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp.h(202): note: see the first reference to 'std::basic_ostream<char,std::char_traits<char>>::operator <<' in 'risc0::operator <<'
+merkle.cpp
+fri.cpp
+poly_group.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+prove.cpp
+fri.cpp
+merkle.cpp
+verify.cpp
+taps.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out\cxxbridge\crate\risc0/zkp/core/fp4.h(167): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+exit code: 0
+cargo:rerun-if-env-changed=AR_aarch64-pc-windows-msvc
+AR_aarch64-pc-windows-msvc = None
+cargo:rerun-if-env-changed=AR_aarch64_pc_windows_msvc
+AR_aarch64_pc_windows_msvc = None
+cargo:rerun-if-env-changed=HOST_AR
+HOST_AR = None
+cargo:rerun-if-env-changed=AR
+AR = None
+cargo:rerun-if-env-changed=ARFLAGS
+ARFLAGS = None
+cargo:rerun-if-env-changed=HOST_ARFLAGS
+HOST_ARFLAGS = None
+cargo:rerun-if-env-changed=ARFLAGS_aarch64_pc_windows_msvc
+ARFLAGS_aarch64_pc_windows_msvc = None
+cargo:rerun-if-env-changed=ARFLAGS_aarch64-pc-windows-msvc
+ARFLAGS_aarch64-pc-windows-msvc = None
+cargo:rustc-link-search=native=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\atlmfc\lib\arm64
+cargo:rustc-link-lib=static=risc0-zkp-sys
+cargo:rustc-link-search=native=C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\build\risc0-zkp-sys-933c3a1d525a1c61\out
+cargo:rustc-link-lib=static=tbb
+cargo:rustc-link-lib=static=risc0-core-sys

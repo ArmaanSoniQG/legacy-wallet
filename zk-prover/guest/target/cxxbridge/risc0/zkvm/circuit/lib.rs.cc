@@ -1,0 +1,1 @@
+../../../../release/build/risc0-zkvm-circuit-sys-d9d1a24b61d3a815/out/cxxbridge/sources/risc0/zkvm/circuit/lib.rs.cc

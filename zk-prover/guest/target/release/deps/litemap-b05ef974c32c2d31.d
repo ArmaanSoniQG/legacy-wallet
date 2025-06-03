@@ -1,0 +1,11 @@
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\deps\litemap-b05ef974c32c2d31.d: C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\lib.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\map.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\mod.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\slice_impl.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\vec_impl.rs
+
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\deps\liblitemap-b05ef974c32c2d31.rlib: C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\lib.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\map.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\mod.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\slice_impl.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\vec_impl.rs
+
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\deps\liblitemap-b05ef974c32c2d31.rmeta: C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\lib.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\map.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\mod.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\slice_impl.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\vec_impl.rs
+
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\lib.rs:
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\map.rs:
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\mod.rs:
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\slice_impl.rs:
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\litemap-0.8.0\src\store\vec_impl.rs:

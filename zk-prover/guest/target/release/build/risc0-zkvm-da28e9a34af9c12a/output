@@ -1,0 +1,4 @@
+cargo:rustc-link-lib=static=tbb
+cargo:rustc-link-lib=static=risc0-core-sys
+cargo:rustc-link-lib=static=risc0-zkp-sys
+cargo:rustc-link-lib=static=risc0-zkvm-sys
