@@ -1,0 +1,11 @@
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\deps\crc32fast-f0567854e7d77be8.d: C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\lib.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\baseline.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\combine.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\specialized\mod.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\table.rs
+
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\deps\libcrc32fast-f0567854e7d77be8.rlib: C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\lib.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\baseline.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\combine.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\specialized\mod.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\table.rs
+
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\release\deps\libcrc32fast-f0567854e7d77be8.rmeta: C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\lib.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\baseline.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\combine.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\specialized\mod.rs C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\table.rs
+
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\lib.rs:
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\baseline.rs:
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\combine.rs:
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\specialized\mod.rs:
+C:\Users\armaa\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crc32fast-1.4.2\src\table.rs:

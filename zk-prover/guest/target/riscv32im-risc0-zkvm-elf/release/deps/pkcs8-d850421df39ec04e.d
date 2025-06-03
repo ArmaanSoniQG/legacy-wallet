@@ -1,0 +1,12 @@
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\riscv32im-risc0-zkvm-elf\release\deps\pkcs8-d850421df39ec04e.d: C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\lib.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\error.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\private_key_info.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\traits.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\version.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\../README.md
+
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\riscv32im-risc0-zkvm-elf\release\deps\libpkcs8-d850421df39ec04e.rlib: C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\lib.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\error.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\private_key_info.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\traits.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\version.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\../README.md
+
+C:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\riscv32im-risc0-zkvm-elf\release\deps\libpkcs8-d850421df39ec04e.rmeta: C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\lib.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\error.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\private_key_info.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\traits.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\version.rs C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\../README.md
+
+C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\lib.rs:
+C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\error.rs:
+C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\private_key_info.rs:
+C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\traits.rs:
+C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\version.rs:
+C:\Users\armaa\.cargo\git\checkouts\formats-0f4cf7e5de45495c\705400a\pkcs8\src\../README.md:

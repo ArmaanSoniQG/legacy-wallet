@@ -1,0 +1,1 @@
+cargo:rustc-link-arg=-TC:\Users\armaa\qsafe\legacy-wallet\zk-prover\guest\target\riscv32im-risc0-zkvm-elf\release\build\risc0-zkvm-guest-64610c52f6af1f7b\out\risc0.ld
