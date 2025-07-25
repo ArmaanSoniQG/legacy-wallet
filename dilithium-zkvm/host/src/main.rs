@@ -3,8 +3,10 @@ use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use std::time::Instant;
 use clap::{Parser, Subcommand};
+use sha2::{Digest, Sha256};
+use pqcrypto_dilithium::dilithium5::*;
+use pqcrypto_traits::sign::{PublicKey, SecretKey, SignedMessage};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -15,36 +17,28 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Verify a signature and generate a ZK proof
-    Verify {
-        /// Path to the Dilithium public key file
+    GenerateKeypair,
+    Sign {
+        #[arg(short = 'k', long)]
+        private_key: PathBuf,
         #[arg(short, long)]
-        public_key: PathBuf,
-
-        /// Path to the signature file
-        #[arg(short, long)]
-        signature: PathBuf,
-
-        /// Message to verify (as string)
-        #[arg(short, long)]
-        message: Option<String>,
-
-        /// Path to message file (alternative to --message)
-        #[arg(short = 'f', long)]
-        message_file: Option<PathBuf>,
-
-        /// Path to save the receipt
+        message: String,
         #[arg(short, long)]
         output: PathBuf,
     },
-    
-    /// Extract verification data from a receipt
+    Verify {
+        #[arg(short, long)]
+        public_key: PathBuf,
+        #[arg(short, long)]
+        signature: PathBuf,
+        #[arg(short, long)]
+        message: String,
+        #[arg(short, long)]
+        output: PathBuf,
+    },
     Extract {
-        /// Path to the receipt file
         #[arg(short, long)]
         receipt: PathBuf,
-        
-        /// Output format (json or hex)
         #[arg(short, long, default_value = "json")]
         format: String,
     },
@@ -55,10 +49,9 @@ struct VerificationInput {
     public_key: Vec<u8>,
     signature: Vec<u8>,
     message: Vec<u8>,
-    nonce: u64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 struct VerificationOutput {
     is_valid: bool,
     public_key_hash: [u8; 32],
@@ -66,139 +59,113 @@ struct VerificationOutput {
 }
 
 fn main() {
-    // Initialize tracing
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
-        .init();
-
-    // Parse command line arguments
     let args = Args::parse();
 
     match args.command {
-        Commands::Verify { public_key, signature, message, message_file, output } => {
-            verify_and_prove(public_key, signature, message, message_file, output);
-        },
-        Commands::Extract { receipt, format } => {
-            extract_receipt_data(receipt, &format);
-        },
-    }
-}
-
-fn verify_and_prove(
-    public_key_path: PathBuf,
-    signature_path: PathBuf,
-    message: Option<String>,
-    message_file: Option<PathBuf>,
-    output_path: PathBuf,
-) {
-    println!("Dilithium-5 Signature Verification with RISC Zero zkVM");
-    println!("------------------------------------------------------");
-
-    // Get public key
-    let public_key = fs::read(&public_key_path)
-        .expect("Failed to read public key file");
-
-    // Get signature
-    let signature = fs::read(&signature_path)
-        .expect("Failed to read signature file");
-
-    // Get message
-    let message_bytes = if let Some(msg) = message {
-        msg.into_bytes()
-    } else if let Some(path) = message_file {
-        fs::read(path).expect("Failed to read message file")
-    } else {
-        eprintln!("No message provided");
-        std::process::exit(1);
-    };
-
-    // Generate a nonce (timestamp)
-    let nonce = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .expect("Time went backwards")
-        .as_secs();
-
-    // Create the verification input
-    let input = VerificationInput {
-        public_key,
-        signature,
-        message: message_bytes,
-        nonce,
-    };
-
-    // Generate the proof
-    let receipt = generate_proof(input);
-
-    // Save the receipt
-    let receipt_bytes = bincode::serialize(&receipt).expect("Failed to serialize receipt");
-    fs::write(&output_path, receipt_bytes).expect("Failed to write receipt to file");
-    println!("Receipt saved to {}", output_path.display());
-    
-    // Extract and display verification result
-    let verification_result: VerificationOutput = receipt.journal.decode()
-        .expect("Failed to deserialize verification result");
-    
-    println!("Verification result: {}", if verification_result.is_valid { "Valid ✅" } else { "Invalid ❌" });
-    println!("Public key hash: 0x{}", hex::encode(verification_result.public_key_hash));
-    println!("Message hash: 0x{}", hex::encode(verification_result.message_hash));
-}
-
-fn generate_proof(input: VerificationInput) -> Receipt {
-    // Prepare the zkVM environment with our input
-    let env = ExecutorEnv::builder()
-        .write(&input)
-        .unwrap()
-        .build()
-        .unwrap();
-
-    // Start timing the proof generation
-    let start = Instant::now();
-    println!("Generating zero-knowledge proof...");
-
-    // Generate the proof
-    let prover = default_prover();
-    let prove_result = prover.prove(env, DILITHIUM_VERIFIER_ELF);
-
-    match prove_result {
-        Ok(prove_info) => {
-            let duration = start.elapsed();
-            println!("Proof generated in {:.2?}", duration);
-
-            // Extract the receipt
-            let receipt = prove_info.receipt;
-
-            // Verify the receipt
-            println!("Verifying the proof...");
-            match receipt.verify(DILITHIUM_VERIFIER_ID) {
-                Ok(_) => println!("✅ Proof verification successful!"),
-                Err(e) => println!("❌ Proof verification failed: {}", e),
+        Commands::GenerateKeypair => {
+            println!("Generating REAL Dilithium-5 key pair...");
+            
+            // Generate REAL Dilithium-5 key pair
+            let (public_key, secret_key) = keypair();
+            
+            // Write keys to files
+            fs::write("private_key.bin", secret_key.as_bytes()).expect("Failed to write private key");
+            fs::write("public_key.bin", public_key.as_bytes()).expect("Failed to write public key");
+            
+            // Calculate hash of public key
+            let mut hasher = Sha256::new();
+            hasher.update(public_key.as_bytes());
+            let hash = hasher.finalize();
+            
+            println!("✅ REAL Dilithium-5 key pair generated!");
+            println!("Private key: private_key.bin");
+            println!("Public key: public_key.bin");
+            println!("Public key hash: {}", hex::encode(hash));
+        }
+        
+        Commands::Sign { private_key, message, output } => {
+            println!("Signing with REAL Dilithium-5...");
+            
+            let secret_key_bytes = fs::read(&private_key).expect("Failed to read private key");
+            let secret_key = SecretKey::from_bytes(&secret_key_bytes).expect("Invalid private key");
+            
+            // Sign with REAL Dilithium-5
+            let signed_message = sign(message.as_bytes(), &secret_key);
+            
+            fs::write(&output, signed_message.as_bytes()).expect("Failed to write signature");
+            
+            println!("✅ Message signed with REAL Dilithium-5!");
+            println!("Signature saved to: {}", output.display());
+        }
+        
+        Commands::Verify { public_key, signature, message, output } => {
+            println!("Verifying with REAL Dilithium-5 and generating zkVM proof...");
+            
+            let public_key_bytes = fs::read(&public_key).expect("Failed to read public key");
+            let signature_bytes = fs::read(&signature).expect("Failed to read signature");
+            let message_bytes = message.as_bytes().to_vec();
+            
+            // Verify REAL Dilithium-5 signature
+            let public_key_obj = PublicKey::from_bytes(&public_key_bytes).expect("Invalid public key");
+            let signed_message = SignedMessage::from_bytes(&signature_bytes).expect("Invalid signature");
+            
+            let verification_result = open(&signed_message, &public_key_obj);
+            let is_valid = verification_result.is_ok();
+            
+            if is_valid {
+                println!("✅ REAL Dilithium-5 signature is VALID!");
+            } else {
+                println!("❌ REAL Dilithium-5 signature is INVALID!");
             }
-
-            receipt
+            
+            // Create input for zkVM
+            let input = VerificationInput {
+                public_key: public_key_bytes.clone(),
+                signature: signature_bytes,
+                message: message_bytes.clone(),
+            };
+            
+            // Generate zkVM proof
+            let env = ExecutorEnv::builder()
+                .write(&input)
+                .unwrap()
+                .build()
+                .unwrap();
+            
+            let prover = default_prover();
+            let receipt = prover.prove(env, DILITHIUM_VERIFIER_ELF).unwrap();
+            
+            // Verify the receipt
+            receipt.verify(DILITHIUM_VERIFIER_ID).unwrap();
+            
+            // Save receipt
+            let receipt_bytes = bincode::serialize(&receipt).unwrap();
+            fs::write(&output, &receipt_bytes).expect("Failed to write receipt");
+            
+            println!("✅ REAL zkVM proof generated and verified!");
+            println!("Receipt saved to: {}", output.display());
         }
-        Err(e) => {
-            panic!("Proof generation failed: {}", e);
+        
+        Commands::Extract { receipt, format } => {
+            println!("Extracting verification data...");
+            
+            let receipt_bytes = fs::read(&receipt).expect("Failed to read receipt");
+            let receipt: Receipt = bincode::deserialize(&receipt_bytes).unwrap();
+            
+            let output: VerificationOutput = receipt.journal.decode().unwrap();
+            
+            match format.as_str() {
+                "json" => {
+                    println!("{}", serde_json::to_string_pretty(&output).unwrap());
+                }
+                "hex" => {
+                    println!("journal: {}", hex::encode(receipt.journal.bytes));
+                    println!("seal: {}", hex::encode(bincode::serialize(&receipt.inner).unwrap()));
+                }
+                _ => {
+                    eprintln!("Unknown format: {}", format);
+                }
+            }
         }
-    }
-}
-
-fn extract_receipt_data(receipt_path: PathBuf, format: &str) {
-    // Read receipt file
-    let receipt_bytes = fs::read(&receipt_path).expect("Failed to read receipt file");
-    let receipt: Receipt = bincode::deserialize(&receipt_bytes).expect("Failed to deserialize receipt");
-    
-    // Extract verification result
-    let verification_result: VerificationOutput = receipt.journal.decode()
-        .expect("Failed to deserialize verification result");
-    
-    // Display in requested format
-    if format == "json" {
-        let json = serde_json::to_string_pretty(&verification_result).expect("Failed to serialize to JSON");
-        println!("{}", json);
-    } else if format == "hex" {
-        println!("Journal: 0x{}", hex::encode(receipt.journal.bytes));
-        println!("Receipt inner: {:?}", receipt.inner);
-    } else {
-        println!("Unsupported format: {}", format);
     }
 }

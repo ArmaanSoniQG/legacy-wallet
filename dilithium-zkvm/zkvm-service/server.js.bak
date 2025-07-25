@@ -1,6 +1,7 @@
 const express = require('express');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const path = require('path');
 const cors = require('cors');
 
 const app = express();
@@ -9,6 +10,9 @@ app.use(express.json());
 
 const HOST_BINARY_PATH = '../target/release/host';
 
+/**
+ * Run the host binary with given arguments
+ */
 async function runHostBinary(args) {
     return new Promise((resolve) => {
         const process = spawn(HOST_BINARY_PATH, args);
@@ -34,18 +38,27 @@ async function runHostBinary(args) {
     });
 }
 
+/**
+ * Generate Dilithium-5 key pair
+ * POST /generate-key
+ * Returns: { success: boolean, publicKey: string, privateKey: string, publicKeyHash: string }
+ */
 app.post('/generate-key', async (req, res) => {
     try {
+        // Generate real Dilithium-5 key pair
         const result = await runHostBinary(['generate-keypair']);
         
         if (!result.success) {
             throw new Error(result.stderr || 'Key generation failed');
         }
         
+        // Parse the output to extract keys
         const lines = result.stdout.split('\n');
         const hashLine = lines.find(line => line.includes('Public key hash:'));
+        
         const publicKeyHash = hashLine ? hashLine.split('Public key hash: ')[1].trim() : '';
         
+        // Read the generated key files
         const publicKey = fs.readFileSync('public_key.bin').toString('hex');
         const privateKey = fs.readFileSync('private_key.bin').toString('hex');
         
@@ -65,6 +78,12 @@ app.post('/generate-key', async (req, res) => {
     }
 });
 
+/**
+ * Sign message and generate zkVM proof
+ * POST /verify
+ * Body: { message: string }
+ * Returns: { success: boolean, proof: { journal: string, seal: string, isValid: boolean } }
+ */
 app.post('/verify', async (req, res) => {
     try {
         const { message } = req.body;
@@ -73,6 +92,7 @@ app.post('/verify', async (req, res) => {
             throw new Error('Message is required');
         }
         
+        // Step 1: Sign the message
         const signResult = await runHostBinary([
             'sign',
             '--private-key', 'private_key.bin',
@@ -84,6 +104,7 @@ app.post('/verify', async (req, res) => {
             throw new Error('Signing failed: ' + signResult.stderr);
         }
         
+        // Step 2: Verify and generate zkVM proof
         const verifyResult = await runHostBinary([
             'verify',
             '--public-key', 'public_key.bin',
@@ -96,6 +117,7 @@ app.post('/verify', async (req, res) => {
             throw new Error('Verification failed: ' + verifyResult.stderr);
         }
         
+        // Step 3: Extract proof data
         const extractResult = await runHostBinary([
             'extract',
             '--receipt', 'receipt.bin',
@@ -106,6 +128,7 @@ app.post('/verify', async (req, res) => {
             throw new Error('Proof extraction failed: ' + extractResult.stderr);
         }
         
+        // Parse the extracted proof data
         const lines = extractResult.stdout.trim().split('\n');
         const journalLine = lines.find(l => l.startsWith('journal:'));
         const sealLine = lines.find(l => l.startsWith('seal:'));
@@ -131,7 +154,7 @@ app.post('/verify', async (req, res) => {
     }
 });
 
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`zkVM service running on port ${PORT}`);
 });

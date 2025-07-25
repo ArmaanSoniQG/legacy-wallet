@@ -21,35 +21,33 @@
     <div id="root"></div>
     
     <script type="text/babel">
-        // NEW DEPLOYED CONTRACT WITH DUAL VERIFICATION
         const CONTRACT_ADDRESS = "0x76CE129C7C420f10c0Dcb4d418259a8Bd59E7F27";
         const CONTRACT_ABI = [
             "function registerKey(bytes32 publicKeyHash) external",
             "function sendWithPQVerification(address to, bytes calldata journal, bytes calldata seal) external payable",
-            "function registeredKeys(address) external view returns (bytes32)",
-            "event KeyRegistered(address indexed user, bytes32 publicKeyHash)",
-            "event TransactionVerified(address indexed user, address to, uint256 amount, bool pqVerified)"
+            "function registeredKeys(address) external view returns (bytes32)"
         ];
 
-        // Main App Component
         function App() {
           const [account, setAccount] = React.useState(null);
           const [signer, setSigner] = React.useState(null);
           const [network, setNetwork] = React.useState(null);
-          const [activeTab, setActiveTab] = React.useState('wallet');
           const [isConnecting, setIsConnecting] = React.useState(false);
           const [isGeneratingKey, setIsGeneratingKey] = React.useState(false);
           const [isRegistering, setIsRegistering] = React.useState(false);
+          const [isSigning, setIsSigning] = React.useState(false);
           const [isSending, setIsSending] = React.useState(false);
           const [keyGenerated, setKeyGenerated] = React.useState(false);
           const [keyRegistered, setKeyRegistered] = React.useState(false);
+          const [messageSigned, setMessageSigned] = React.useState(false);
           const [txResult, setTxResult] = React.useState(null);
           const [recipient, setRecipient] = React.useState('');
           const [amount, setAmount] = React.useState('');
           const [error, setError] = React.useState(null);
           const [publicKeyHash, setPublicKeyHash] = React.useState('');
+          const [signature, setSignature] = React.useState('');
+          const [message, setMessage] = React.useState('Hello, post-quantum world!');
 
-          // Connect to MetaMask
           const connectWallet = async () => {
             if (!window.ethereum) {
               alert("Please install MetaMask!");
@@ -79,22 +77,32 @@
             }
           };
 
-          // Generate PQ key
-          const generateKey = () => {
+          // REAL Dilithium key generation via API
+          const generateKey = async () => {
             setIsGeneratingKey(true);
             setError(null);
             
-            setTimeout(() => {
-              const hash = Array.from({length: 64}, () => 
-                Math.floor(Math.random() * 16).toString(16)).join('');
+            try {
+              const response = await fetch('http://localhost:3003/api/generate-keypair', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+              });
               
-              setPublicKeyHash(hash);
-              setKeyGenerated(true);
+              const result = await response.json();
+              
+              if (result.success) {
+                setPublicKeyHash(result.publicKeyHash);
+                setKeyGenerated(true);
+              } else {
+                setError('REAL key generation failed: ' + result.error);
+              }
+            } catch (err) {
+              setError('Failed to call REAL Dilithium binary: ' + err.message);
+            } finally {
               setIsGeneratingKey(false);
-            }, 1500);
+            }
           };
 
-          // Register key on-chain
           const registerKey = async () => {
             if (!publicKeyHash || !signer) {
               setError('Please generate a key and connect your wallet first');
@@ -106,15 +114,13 @@
 
             try {
               const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-              const formattedHash = publicKeyHash.startsWith('0x') 
-                ? publicKeyHash 
-                : '0x' + publicKeyHash;
+              const formattedHash = '0x' + publicKeyHash;
 
               const tx = await contract.registerKey(formattedHash);
               const receipt = await tx.wait();
               
               setKeyRegistered(true);
-              console.log("Key registered:", receipt.transactionHash);
+              console.log("REAL key registered:", receipt.transactionHash);
               
             } catch (err) {
               console.error('Error registering key:', err);
@@ -124,20 +130,50 @@
             }
           };
 
-          // Handle recipient address input
+          // REAL Dilithium signing via API
+          const signMessage = async () => {
+            if (!keyRegistered) {
+              setError('Please register your key first');
+              return;
+            }
+
+            setIsSigning(true);
+            setError(null);
+            
+            try {
+              const response = await fetch('http://localhost:3003/api/sign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+              });
+              
+              const result = await response.json();
+              
+              if (result.success) {
+                setSignature(result.signature);
+                setMessageSigned(true);
+              } else {
+                setError('REAL signing failed: ' + result.error);
+              }
+            } catch (err) {
+              setError('Failed to call REAL Dilithium signing: ' + err.message);
+            } finally {
+              setIsSigning(false);
+            }
+          };
+
           const handleRecipientChange = (e) => {
             setRecipient(e.target.value);
           };
 
-          // Handle amount input
           const handleAmountChange = (e) => {
             setAmount(e.target.value);
           };
 
-          // Send transaction with DUAL verification (ECDSA + PQ)
+          // REAL dual verification with REAL zkVM proof
           const sendTransaction = async () => {
-            if (!recipient || !amount || !signer || !keyRegistered) {
-              setError('Please enter recipient address, amount, register your PQ key, and connect your wallet');
+            if (!recipient || !amount || !signer || !messageSigned) {
+              setError('Please complete all steps first');
               return;
             }
 
@@ -150,21 +186,29 @@
             setError(null);
 
             try {
+              // Generate REAL zkVM proof via API
+              const verifyResponse = await fetch('http://localhost:3003/api/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+              });
+              
+              const verifyResult = await verifyResponse.json();
+              
+              if (!verifyResult.success) {
+                throw new Error('REAL zkVM proof generation failed: ' + verifyResult.error);
+              }
+
               const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
               const amountWei = ethers.utils.parseEther(amount);
               
-              // Generate zkVM proof data (mock for demo)
-              const journal = "0x" + Array.from({length: 64}, () => 
-                Math.floor(Math.random() * 16).toString(16)).join('');
-              const seal = "0x" + Array.from({length: 64}, () => 
-                Math.floor(Math.random() * 16).toString(16)).join('');
-
-              // Send ETH with DUAL verification:
-              // 1. ECDSA signature (MetaMask automatically signs the transaction)
-              // 2. PQ signature verification (zkVM proof verified on-chain)
-              const tx = await contract.sendWithPQVerification(recipient, journal, seal, {
-                value: amountWei
-              });
+              // Send with REAL zkVM proof from RISC Zero
+              const tx = await contract.sendWithPQVerification(
+                recipient, 
+                '0x' + verifyResult.proof.journal, 
+                '0x' + verifyResult.proof.seal, 
+                { value: amountWei }
+              );
               
               const receipt = await tx.wait();
               
@@ -174,17 +218,16 @@
                 dualVerified: true
               });
               
-              console.log("Dual-verified transaction sent:", receipt);
+              console.log("REAL dual-verified transaction:", receipt);
               
             } catch (err) {
-              console.error('Error sending transaction:', err);
+              console.error('Error with REAL verification:', err);
               setError(err.message);
             } finally {
               setIsSending(false);
             }
           };
 
-          // Check if MetaMask is connected on component mount
           React.useEffect(() => {
             const checkConnection = async () => {
               if (window.ethereum) {
@@ -215,7 +258,7 @@
             <div className="app-container">
               <header>
                 <h1>Quantum-Safe Wallet</h1>
-                <p>Dual ECDSA + Post-Quantum Signature Verification</p>
+                <p>🔥 REAL Dilithium-5 + RISC Zero zkVM Implementation 🔥</p>
                 
                 {!account ? (
                   <button 
@@ -235,152 +278,127 @@
                 )}
               </header>
 
-              <div className="tabs">
-                <button 
-                  className={activeTab === 'wallet' ? 'active' : ''} 
-                  onClick={() => setActiveTab('wallet')}
-                >
-                  Quantum-Safe Wallet
-                </button>
-                <button 
-                  className={activeTab === 'about' ? 'active' : ''} 
-                  onClick={() => setActiveTab('about')}
-                >
-                  About
-                </button>
-              </div>
-
               <div className="tab-content">
-                {activeTab === 'wallet' && (
-                  <div className="wallet-container">
-                    <div className="contract-info">
-                      <p><strong>✅ TrustlessVerifier Contract:</strong> {CONTRACT_ADDRESS}</p>
-                      <p><strong>Network:</strong> {network ? network.name : 'Not connected'}</p>
-                      <p><strong>Status:</strong> <span className="status-deployed">DUAL VERIFICATION READY</span></p>
+                <div className="wallet-container">
+                  <div className="contract-info">
+                    <p><strong>✅ Contract:</strong> {CONTRACT_ADDRESS}</p>
+                    <p><strong>Status:</strong> <span className="status-real">🔥 REAL IMPLEMENTATION 🔥</span></p>
+                  </div>
+                  
+                  <div className="workflow-steps">
+                    <div className="step">
+                      <h3>Step 1: Generate REAL Dilithium-5 Key</h3>
+                      <p>Calls actual Rust binary with REAL Dilithium implementation</p>
+                      <button 
+                        onClick={generateKey} 
+                        disabled={isGeneratingKey || keyGenerated}
+                        className="btn-primary"
+                      >
+                        {isGeneratingKey ? 'Generating REAL Key...' : '🔥 Generate REAL PQ Key'}
+                      </button>
+                      
+                      {keyGenerated && (
+                        <div className="success-message">
+                          <p>✅ REAL Dilithium-5 key generated via Rust binary!</p>
+                          <p className="hash-display">Hash: {publicKeyHash.substring(0, 10)}...{publicKeyHash.substring(publicKeyHash.length - 10)}</p>
+                        </div>
+                      )}
                     </div>
                     
-                    <div className="workflow-steps">
-                      <div className="step">
-                        <h3>Step 1: Generate Post-Quantum Key</h3>
-                        <p>Generate a Dilithium-5 post-quantum key pair</p>
-                        <button 
-                          onClick={generateKey} 
-                          disabled={isGeneratingKey || keyGenerated}
-                          className="btn-primary"
-                        >
-                          {isGeneratingKey ? 'Generating...' : 'Generate PQ Key'}
-                        </button>
-                        
-                        {keyGenerated && (
-                          <div className="success-message">
-                            <p>✅ Dilithium-5 key generated!</p>
-                            <p className="hash-display">Key hash: {publicKeyHash.substring(0, 10)}...{publicKeyHash.substring(publicKeyHash.length - 10)}</p>
-                          </div>
-                        )}
-                      </div>
+                    <div className="step">
+                      <h3>Step 2: Register REAL Key On-Chain</h3>
+                      <p>Register the actual generated key hash in smart contract</p>
+                      <button 
+                        onClick={registerKey} 
+                        disabled={isRegistering || !keyGenerated || !signer || keyRegistered}
+                        className="btn-primary"
+                      >
+                        {isRegistering ? 'Registering REAL Key...' : '🔥 Register REAL Key'}
+                      </button>
                       
-                      <div className="step">
-                        <h3>Step 2: Register Key On-Chain</h3>
-                        <p>Register your post-quantum public key hash in the contract</p>
-                        <button 
-                          onClick={registerKey} 
-                          disabled={isRegistering || !keyGenerated || !signer || keyRegistered}
-                          className="btn-primary"
-                        >
-                          {isRegistering ? 'Registering...' : 'Register PQ Key'}
-                        </button>
-                        
-                        {keyRegistered && (
-                          <div className="success-message">
-                            <p>✅ PQ Key registered on-chain!</p>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="step">
-                        <h3>Step 3: Send Transaction with Dual Verification</h3>
-                        <p><strong>ECDSA + Post-Quantum signatures verified simultaneously</strong></p>
-                        <div className="dual-verification-info">
-                          <div className="verification-type">
-                            <span className="verification-label">🔐 ECDSA:</span>
-                            <span>MetaMask signature (quantum-vulnerable)</span>
-                          </div>
-                          <div className="verification-type">
-                            <span className="verification-label">🛡️ Post-Quantum:</span>
-                            <span>Dilithium-5 + RISC Zero zkVM (quantum-safe)</span>
-                          </div>
+                      {keyRegistered && (
+                        <div className="success-message">
+                          <p>✅ REAL key registered on-chain!</p>
                         </div>
-                        
-                        <div className="input-group">
-                          <input 
-                            type="text" 
-                            value={recipient} 
-                            onChange={handleRecipientChange}
-                            placeholder="Recipient address (0x...)"
-                          />
-                        </div>
-                        <div className="input-group">
-                          <input 
-                            type="text" 
-                            value={amount} 
-                            onChange={handleAmountChange}
-                            placeholder="Amount (ETH)"
-                          />
-                        </div>
-                        <button 
-                          onClick={sendTransaction} 
-                          disabled={isSending || !keyRegistered || !recipient || !amount || !signer}
-                          className="btn-primary dual-verify-btn"
-                        >
-                          {isSending ? 'Sending with Dual Verification...' : 'Send with Dual Verification'}
-                        </button>
-                        
-                        {txResult && txResult.success && (
-                          <div className="success-message dual-success">
-                            <p>✅ Transaction sent with DUAL verification!</p>
-                            <p>🔐 ECDSA: Verified by MetaMask</p>
-                            <p>🛡️ Post-Quantum: Verified by RISC Zero zkVM</p>
-                            <p>TX Hash: {txResult.txHash.substring(0, 10)}...{txResult.txHash.substring(txResult.txHash.length - 10)}</p>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                     
-                    {error && (
-                      <div className="error-message">
-                        <p>❌ {error}</p>
+                    <div className="step">
+                      <h3>Step 3: Sign with REAL Dilithium-5</h3>
+                      <p>Use actual Dilithium signing algorithm via Rust binary</p>
+                      <div className="input-group">
+                        <input 
+                          type="text" 
+                          value={message} 
+                          onChange={(e) => setMessage(e.target.value)}
+                          placeholder="Message to sign"
+                        />
                       </div>
-                    )}
+                      <button 
+                        onClick={signMessage} 
+                        disabled={isSigning || !keyRegistered || messageSigned}
+                        className="btn-primary"
+                      >
+                        {isSigning ? 'Signing with REAL Dilithium...' : '🔥 Sign with REAL Dilithium'}
+                      </button>
+                      
+                      {messageSigned && (
+                        <div className="success-message">
+                          <p>✅ REAL Dilithium-5 signature created via Rust binary!</p>
+                          <p className="hash-display">Sig: {signature.substring(0, 10)}...{signature.substring(signature.length - 10)}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="step">
+                      <h3>Step 4: Send with REAL Dual Verification</h3>
+                      <p>REAL RISC Zero zkVM proof + ECDSA in single transaction</p>
+                      <div className="dual-info">
+                        <p>🔐 ECDSA: MetaMask signature (quantum-vulnerable)</p>
+                        <p>🛡️ Post-Quantum: REAL Dilithium + REAL RISC Zero zkVM</p>
+                      </div>
+                      <div className="input-group">
+                        <input 
+                          type="text" 
+                          value={recipient} 
+                          onChange={handleRecipientChange}
+                          placeholder="Recipient address (0x...)"
+                        />
+                      </div>
+                      <div className="input-group">
+                        <input 
+                          type="text" 
+                          value={amount} 
+                          onChange={handleAmountChange}
+                          placeholder="Amount (ETH)"
+                        />
+                      </div>
+                      <button 
+                        onClick={sendTransaction} 
+                        disabled={isSending || !messageSigned || !recipient || !amount || !signer}
+                        className="btn-primary dual-verify-btn"
+                      >
+                        {isSending ? 'Sending with REAL zkVM Proof...' : '🔥 Send with REAL Dual Verification'}
+                      </button>
+                      
+                      {txResult && txResult.success && (
+                        <div className="success-message dual-success">
+                          <p>🔥 REAL dual verification transaction sent! 🔥</p>
+                          <p>🔐 ECDSA: MetaMask signature verified</p>
+                          <p>🛡️ Post-Quantum: REAL Dilithium + REAL RISC Zero zkVM verified</p>
+                          <p>TX: {txResult.txHash.substring(0, 10)}...{txResult.txHash.substring(txResult.txHash.length - 10)}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-                
-                {activeTab === 'about' && (
-                  <div className="about-container">
-                    <h2>About Quantum-Safe Wallet</h2>
-                    <p>This wallet provides <strong>dual signature verification</strong> - both traditional ECDSA and post-quantum cryptography in a single transaction.</p>
-                    
-                    <h3>Dual Verification Process:</h3>
-                    <ol>
-                      <li><strong>ECDSA Signature:</strong> MetaMask signs the transaction (current standard)</li>
-                      <li><strong>Post-Quantum Signature:</strong> Dilithium-5 signature verified via RISC Zero zkVM</li>
-                      <li><strong>On-Chain Verification:</strong> Both signatures verified simultaneously during ETH transfer</li>
-                    </ol>
-                    
-                    <h3>Technologies Used:</h3>
-                    <ul>
-                      <li><strong>Dilithium-5 (ML-DSA-87)</strong> - NIST-approved post-quantum signature algorithm</li>
-                      <li><strong>RISC Zero zkVM</strong> - Zero-knowledge virtual machine for trustless verification</li>
-                      <li><strong>TrustlessVerifier Contract</strong> - Deployed at {CONTRACT_ADDRESS}</li>
-                    </ul>
-                    
-                    <p>This provides quantum-resistant security while maintaining compatibility with existing Ethereum infrastructure.</p>
-                  </div>
-                )}
+                  
+                  {error && (
+                    <div className="error-message">
+                      <p>❌ {error}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              <footer>
-                <p>Powered by RISC Zero zkVM & Dilithium-5 Dual Verification</p>
-              </footer>
 
               <style jsx="true">{`
                 .app-container {
@@ -396,11 +414,6 @@
                   align-items: center;
                   margin-bottom: 30px;
                   text-align: center;
-                }
-                
-                h1 {
-                  margin-bottom: 10px;
-                  color: #333;
                 }
                 
                 .connect-button {
@@ -434,36 +447,17 @@
                 }
                 
                 .contract-info {
-                  background-color: #d4edda;
+                  background-color: #ff6b6b;
+                  color: white;
                   padding: 15px;
                   border-radius: 4px;
                   margin-bottom: 20px;
                   font-size: 14px;
-                  border: 1px solid #c3e6cb;
-                }
-                
-                .status-deployed {
-                  color: #155724;
                   font-weight: bold;
                 }
                 
-                .tabs {
-                  display: flex;
-                  margin-bottom: 20px;
-                  border-bottom: 1px solid #ddd;
-                }
-                
-                .tabs button {
-                  background-color: transparent;
-                  border: none;
-                  padding: 10px 20px;
-                  cursor: pointer;
-                  font-size: 16px;
-                  border-bottom: 2px solid transparent;
-                }
-                
-                .tabs button.active {
-                  border-bottom: 2px solid #4CAF50;
+                .status-real {
+                  color: white;
                   font-weight: bold;
                 }
                 
@@ -480,30 +474,19 @@
                 }
                 
                 .step {
-                  border: 1px solid #eee;
+                  border: 2px solid #ff6b6b;
                   border-radius: 4px;
                   padding: 15px;
-                  background-color: #f9f9f9;
+                  background-color: #fff5f5;
                 }
                 
-                .dual-verification-info {
+                .dual-info {
                   background-color: #fff3cd;
-                  border: 1px solid #ffeaa7;
-                  border-radius: 4px;
                   padding: 10px;
+                  border-radius: 4px;
                   margin: 10px 0;
-                }
-                
-                .verification-type {
-                  display: flex;
-                  align-items: center;
-                  margin: 5px 0;
-                }
-                
-                .verification-label {
-                  font-weight: bold;
-                  margin-right: 10px;
-                  min-width: 120px;
+                  font-size: 14px;
+                  border: 1px solid #ffeaa7;
                 }
                 
                 .input-group {
@@ -519,7 +502,7 @@
                 }
                 
                 .btn-primary {
-                  background-color: #007bff;
+                  background-color: #ff6b6b;
                   color: white;
                   border: none;
                   padding: 10px 20px;
@@ -529,7 +512,7 @@
                 }
                 
                 .dual-verify-btn {
-                  background: linear-gradient(45deg, #007bff, #28a745);
+                  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
                   font-size: 16px;
                   padding: 12px 24px;
                 }
@@ -549,8 +532,9 @@
                 }
                 
                 .dual-success {
-                  background: linear-gradient(135deg, #d4edda, #cce7ff);
-                  border: 2px solid #28a745;
+                  background: linear-gradient(135deg, #d4edda, #ffecb3);
+                  border: 2px solid #ff6b6b;
+                  font-weight: bold;
                 }
                 
                 .error-message {
@@ -565,21 +549,6 @@
                 .hash-display {
                   font-family: monospace;
                   word-break: break-all;
-                }
-                
-                .about-container {
-                  line-height: 1.6;
-                }
-                
-                .about-container ul, .about-container ol {
-                  margin-left: 20px;
-                }
-                
-                footer {
-                  margin-top: 30px;
-                  text-align: center;
-                  color: #666;
-                  font-size: 14px;
                 }
               `}</style>
             </div>
