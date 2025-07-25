@@ -1,0 +1,22 @@
+[workspace]
+members = [
+    "host",
+    "methods",
+    "wallet",
+]
+
+[workspace.dependencies]
+risc0-zkvm = "2.3.1"
+crystals-dilithium = "1.0.0"
+serde = { version = "1.0", features = ["derive"] }
+
+[package]
+name = "dilithium-zkvm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+methods = { path = "methods" }
+risc0-zkvm = { workspace = true }
+crystals-dilithium = { workspace = true }
+serde = { workspace = true }
