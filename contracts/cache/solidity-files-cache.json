@@ -1,0 +1,40 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/workspaces/legacy-wallet/contracts/contracts/TrustlessVerifier.sol": {
+      "lastModificationDate": 1753391425508,
+      "contentHash": "18266d8d1b0158ce86fe27db4d577b56",
+      "sourceName": "contracts/TrustlessVerifier.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "TrustlessVerifier"
+      ]
+    }
+  }
+}

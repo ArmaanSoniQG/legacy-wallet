@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISC Zero Dilithium Integration Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/babel-standalone@6.26.0/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .step {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-tertiary {
+            background-color: #ffc107;
+            color: black;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 10px;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RISC Zero Dilithium Integration Test</h1>
+        <div id="app"></div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Mock data for testing
+        const mockPublicKey = "0000000000000000000000000000000000000000000000000000000000000000";
+        const mockSignature = "0000000000000000000000000000000000000000000000000000000000000000";
+        const mockMessage = "Hello, post-quantum world!";
+        
+        // Smart contract address
+        const TRUSTLESS_VERIFIER_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+        
+        // Service URL
+        const ZKVM_SERVICE_URL = 'http://localhost:3001';
+
+        function RiscZeroVerification() {
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [proof, setProof] = useState(null);
+            const [verificationResult, setVerificationResult] = useState(null);
+            const [error, setError] = useState(null);
+            const [walletConnected, setWalletConnected] = useState(false);
+            const [signer, setSigner] = useState(null);
+            
+            // Connect to MetaMask
+            const connectWallet = async () => {
+                try {
+                    if (window.ethereum) {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        await provider.send("eth_requestAccounts", []);
+                        const signer = provider.getSigner();
+                        setSigner(signer);
+                        setWalletConnected(true);
+                    } else {
+                        setError("MetaMask not installed");
+                    }
+                } catch (err) {
+                    setError(err.message);
+                }
+            };
+
+            // Generate ZK proof
+            const generateZkProof = async () => {
+                setIsGenerating(true);
+                setError(null);
+
+                try {
+                    const response = await fetch(`${ZKVM_SERVICE_URL}/verify`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            publicKey: mockPublicKey,
+                            signature: mockSignature,
+                            message: mockMessage,
+                        }),
+                    });
+
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        throw new Error(result.error || 'Failed to generate proof');
+                    }
+
+                    setProof(result.proof);
+                    console.log('ZK Proof generated:', result.proof);
+
+                } catch (err) {
+                    console.error('Error generating ZK proof:', err);
+                    setError(err.message);
+                } finally {
+                    setIsGenerating(false);
+                }
+            };
+
+            // Verify on-chain (mock implementation)
+            const verifyOnChain = async () => {
+                if (!proof || !signer) {
+                    setError('No proof available or wallet not connected');
+                    return;
+                }
+
+                try {
+                    // In a real implementation, this would call the smart contract
+                    // For this demo, we'll just simulate a successful verification
+                    setVerificationResult({
+                        isValid: proof.isValid,
+                        publicKeyHash: proof.publicKeyHash,
+                        messageHash: proof.messageHash,
+                        txHash: '0x' + '0'.repeat(64)
+                    });
+                    
+                    console.log('On-chain verification simulated');
+
+                } catch (err) {
+                    console.error('Error verifying on-chain:', err);
+                    setError(err.message);
+                }
+            };
+
+            return (
+                <div className="card">
+                    <h2>RISC Zero zkVM Verification</h2>
+                    
+                    <div className="step">
+                        <h3>Step 1: Connect Wallet</h3>
+                        <button 
+                            onClick={connectWallet} 
+                            disabled={walletConnected}
+                            className="btn-tertiary"
+                        >
+                            {walletConnected ? 'Wallet Connected' : 'Connect Wallet'}
+                        </button>
+                        
+                        {walletConnected && (
+                            <div className="result">
+                                <p>✅ Wallet connected!</p>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="step">
+                        <h3>Step 2: Generate ZK Proof</h3>
+                        <button 
+                            onClick={generateZkProof} 
+                            disabled={isGenerating}
+                            className="btn-primary"
+                        >
+                            {isGenerating ? 'Generating Proof...' : 'Generate ZK Proof'}
+                        </button>
+                        
+                        {proof && (
+                            <div className="result">
+                                <p>✅ Proof generated successfully!</p>
+                                <p>Valid: {proof.isValid ? 'Yes' : 'No'}</p>
+                                <p>Public Key Hash: {proof.publicKeyHash}</p>
+                                <p>Message Hash: {proof.messageHash}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="step">
+                        <h3>Step 3: Verify On-Chain</h3>
+                        <button 
+                            onClick={verifyOnChain} 
+                            disabled={!proof || !walletConnected}
+                            className="btn-secondary"
+                        >
+                            Verify on Blockchain
+                        </button>
+                        
+                        {verificationResult && (
+                            <div className="result">
+                                <p>✅ On-chain verification completed!</p>
+                                <p>Valid: {verificationResult.isValid ? 'Yes' : 'No'}</p>
+                                <p>TX Hash: {verificationResult.txHash}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {error && (
+                        <div className="error">
+                            <p>❌ Error: {error}</p>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<RiscZeroVerification />, document.getElementById('app'));
+    </script>
+</body>
+</html>
