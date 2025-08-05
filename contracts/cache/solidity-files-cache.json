@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/workspaces/legacy-wallet/contracts/contracts/TrustlessVerifier.sol": {
-      "lastModificationDate": 1753391425508,
-      "contentHash": "18266d8d1b0158ce86fe27db4d577b56",
+      "lastModificationDate": 1753745681672,
+      "contentHash": "b4bd8ead2482dd78a365553d59621c27",
       "sourceName": "contracts/TrustlessVerifier.sol",
       "solcConfig": {
         "version": "0.8.19",
@@ -34,6 +34,115 @@
       ],
       "artifacts": [
         "TrustlessVerifier"
+      ]
+    },
+    "/workspaces/legacy-wallet/contracts/contracts/HybridWallet.sol": {
+      "lastModificationDate": 1753817370712,
+      "contentHash": "3fae4ede1bab9481b01d04436db552bb",
+      "sourceName": "contracts/HybridWallet.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./SessionRegistry.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.18"
+      ],
+      "artifacts": [
+        "HybridWallet"
+      ]
+    },
+    "/workspaces/legacy-wallet/contracts/contracts/HybridWalletFactory.sol": {
+      "lastModificationDate": 1753817423916,
+      "contentHash": "153d82cafc08f225e7b78e254a323cf2",
+      "sourceName": "contracts/HybridWalletFactory.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./HybridWallet.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.18"
+      ],
+      "artifacts": [
+        "HybridWalletFactory"
+      ]
+    },
+    "/workspaces/legacy-wallet/contracts/contracts/SessionRegistry.sol": {
+      "lastModificationDate": 1753817317384,
+      "contentHash": "ff8a97cd909435cb4dca6edb3c388088",
+      "sourceName": "contracts/SessionRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "SessionRegistry"
       ]
     }
   }

@@ -1,0 +1,10 @@
+/workspaces/legacy-wallet/boundless-service/target/debug/deps/alloy_signer_local-0aa4e9fb6af87d4f.d: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/error.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/private_key.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/../README.md
+
+/workspaces/legacy-wallet/boundless-service/target/debug/deps/liballoy_signer_local-0aa4e9fb6af87d4f.rlib: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/error.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/private_key.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/../README.md
+
+/workspaces/legacy-wallet/boundless-service/target/debug/deps/liballoy_signer_local-0aa4e9fb6af87d4f.rmeta: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/error.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/private_key.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/../README.md
+
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/lib.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/error.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/private_key.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-signer-local-1.0.23/src/../README.md:

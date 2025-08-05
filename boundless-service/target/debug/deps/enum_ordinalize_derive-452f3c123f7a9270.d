@@ -1,0 +1,9 @@
+/workspaces/legacy-wallet/boundless-service/target/debug/deps/enum_ordinalize_derive-452f3c123f7a9270.d: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/int128.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/int_wrapper.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/panic.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/variant_type.rs
+
+/workspaces/legacy-wallet/boundless-service/target/debug/deps/libenum_ordinalize_derive-452f3c123f7a9270.so: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/int128.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/int_wrapper.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/panic.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/variant_type.rs
+
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/lib.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/int128.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/int_wrapper.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/panic.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/enum-ordinalize-derive-4.3.1/src/variant_type.rs:

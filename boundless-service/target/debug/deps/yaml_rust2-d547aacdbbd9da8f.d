@@ -1,0 +1,11 @@
+/workspaces/legacy-wallet/boundless-service/target/debug/deps/yaml_rust2-d547aacdbbd9da8f.d: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/char_traits.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/debug.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/emitter.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/parser.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/scanner.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/yaml.rs
+
+/workspaces/legacy-wallet/boundless-service/target/debug/deps/libyaml_rust2-d547aacdbbd9da8f.rmeta: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/char_traits.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/debug.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/emitter.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/parser.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/scanner.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/yaml.rs
+
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/lib.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/char_traits.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/debug.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/emitter.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/parser.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/scanner.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.9.0/src/yaml.rs:

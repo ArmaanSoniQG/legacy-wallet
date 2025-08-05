@@ -1,0 +1,11 @@
+/workspaces/legacy-wallet/boundless-service/target/debug/deps/risc0_binfmt-17e9afdc66d3ed21.d: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/addr.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/elf.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/exit_code.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/hash.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/image.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/sys_state.rs
+
+/workspaces/legacy-wallet/boundless-service/target/debug/deps/librisc0_binfmt-17e9afdc66d3ed21.rmeta: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/addr.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/elf.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/exit_code.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/hash.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/image.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/sys_state.rs
+
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/lib.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/addr.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/elf.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/exit_code.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/hash.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/image.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/risc0-binfmt-2.0.2/src/sys_state.rs:

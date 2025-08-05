@@ -1,5 +1,6 @@
 use methods::{DILITHIUM_VERIFIER_ELF, DILITHIUM_VERIFIER_ID};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
+use bonsai_sdk::alpha as bonsai_sdk;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -49,6 +50,7 @@ struct VerificationInput {
     public_key: Vec<u8>,
     signature: Vec<u8>,
     message: Vec<u8>,
+    nonce: u64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -58,7 +60,8 @@ struct VerificationOutput {
     message_hash: [u8; 32],
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args = Args::parse();
 
     match args.command {
@@ -118,28 +121,75 @@ fn main() {
                 println!("❌ REAL Dilithium-5 signature is INVALID!");
             }
             
+            // Handle hex-encoded transaction hashes
+            let message_for_zkvm = if message.len() == 64 && message.chars().all(|c| c.is_ascii_hexdigit()) {
+                // It's a hex-encoded hash, convert to bytes
+                hex::decode(&message).expect("Invalid hex")
+            } else {
+                // It's a regular message
+                message_bytes.clone()
+            };
+            
             // Create input for zkVM
             let input = VerificationInput {
                 public_key: public_key_bytes.clone(),
                 signature: signature_bytes,
-                message: message_bytes.clone(),
+                message: message_for_zkvm,
+                nonce: 0,
             };
             
-            // Generate zkVM proof
+            // Generate zkVM proof via Bonsai
             let env = ExecutorEnv::builder()
                 .write(&input)
                 .unwrap()
                 .build()
                 .unwrap();
             
-            let prover = default_prover();
-            let receipt = prover.prove(env, DILITHIUM_VERIFIER_ELF).unwrap();
+            let receipt = if let Ok(client) = bonsai_sdk::Client::from_env() {
+                println!("🚀 Using Bonsai remote proving...");
+                
+                // Create Bonsai session
+                let img_id = hex::encode(DILITHIUM_VERIFIER_ID);
+                let input_data = bincode::serialize(&input).unwrap();
+                
+                let session = client.create_session(img_id, input_data, vec![]).await.unwrap();
+                let session_id = session.uuid;
+                
+                // Poll for completion
+                loop {
+                    let status = client.session_status(session_id).await.unwrap();
+                    match status.status.as_str() {
+                        "SUCCEEDED" => {
+                            println!("✅ Bonsai proof completed!");
+                            break;
+                        }
+                        "RUNNING" => {
+                            println!("⏳ Bonsai proving in progress...");
+                            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                        }
+                        "FAILED" => {
+                            panic!("❌ Bonsai proving failed");
+                        }
+                        _ => {
+                            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                        }
+                    }
+                }
+                
+                // Download receipt
+                let receipt_data = client.session_receipt(session_id).await.unwrap();
+                bincode::deserialize(&receipt_data).unwrap()
+            } else {
+                println!("⚠️  Bonsai not configured, using local proving...");
+                let prover = default_prover();
+                prover.prove(env, DILITHIUM_VERIFIER_ELF).unwrap().receipt
+            };
             
             // Verify the receipt
             receipt.verify(DILITHIUM_VERIFIER_ID).unwrap();
             
             // Save receipt
-            let receipt_bytes = bincode::serialize(&receipt).unwrap();
+            let receipt_bytes = bincode::serialize(&receipt.receipt).unwrap();
             fs::write(&output, &receipt_bytes).expect("Failed to write receipt");
             
             println!("✅ REAL zkVM proof generated and verified!");
