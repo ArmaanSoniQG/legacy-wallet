@@ -1,9 +1,0 @@
-cargo::rerun-if-changed=build.rs
-cargo::rerun-if-env-changed=CARGO_CFG_TARGET_OS
-cargo::rerun-if-env-changed=CARGO_MANIFEST_DIR
-cargo::rerun-if-changed=/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/boundless-market-0.13.0/src/contracts/artifacts
-cargo::rerun-if-env-changed=CARGO_CFG_TARGET_OS
-cargo::rerun-if-env-changed=OUT_DIR
-cargo::rerun-if-env-changed=CARGO_CFG_TARGET_OS
-cargo::rerun-if-env-changed=CARGO_CFG_TARGET_OS
-cargo:warning=Skipping contract bytecode generation during cargo publish

@@ -1,9 +1,0 @@
-/workspaces/legacy-wallet/boundless-service/target/debug/deps/alloy_network_primitives-ef07871c3b0d93b2.d: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/traits.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/block.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/tx_builders.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/../README.md
-
-/workspaces/legacy-wallet/boundless-service/target/debug/deps/liballoy_network_primitives-ef07871c3b0d93b2.rmeta: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/traits.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/block.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/tx_builders.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/../README.md
-
-/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/lib.rs:
-/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/traits.rs:
-/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/block.rs:
-/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/tx_builders.rs:
-/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-network-primitives-1.0.23/src/../README.md:
