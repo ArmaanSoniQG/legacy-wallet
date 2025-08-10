@@ -144,6 +144,112 @@
       "artifacts": [
         "SessionRegistry"
       ]
+    },
+    "/workspaces/legacy-wallet/contracts/contracts/QuantumSafeWallet.sol": {
+      "lastModificationDate": 1754602012681,
+      "contentHash": "c94e48f546be16e7d236865c1a688c99",
+      "sourceName": "contracts/QuantumSafeWallet.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IRiscZeroVerifier",
+        "QuantumSafeWallet"
+      ]
+    },
+    "/workspaces/legacy-wallet/contracts/contracts/SimpleQuantumWallet.sol": {
+      "lastModificationDate": 1754602461793,
+      "contentHash": "df72753a45d9d34330e8c663a0d0f47f",
+      "sourceName": "contracts/SimpleQuantumWallet.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "SimpleQuantumWallet"
+      ]
+    },
+    "/workspaces/legacy-wallet/contracts/contracts/SessionRootRegistry.sol": {
+      "lastModificationDate": 1754786322075,
+      "contentHash": "5fe0af7ed60ccd43e25acfed148915ee",
+      "sourceName": "contracts/SessionRootRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "SessionRootRegistry"
+      ]
     }
   }
 }

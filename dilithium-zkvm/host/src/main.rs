@@ -37,6 +37,14 @@ enum Commands {
         #[arg(short, long)]
         output: PathBuf,
     },
+    VerifyNative {
+        #[arg(short, long)]
+        public_key: PathBuf,
+        #[arg(short, long)]
+        signature: PathBuf,
+        #[arg(short, long)]
+        message: String,
+    },
     Extract {
         #[arg(short, long)]
         receipt: PathBuf,
@@ -194,6 +202,30 @@ async fn main() {
             
             println!("✅ REAL zkVM proof generated and verified!");
             println!("Receipt saved to: {}", output.display());
+        }
+        
+        Commands::VerifyNative { public_key, signature, message } => {
+            println!("Native Dilithium-5 verification ONLY (no zkVM)...");
+            let start_time = std::time::Instant::now();
+            
+            let public_key_bytes = fs::read(&public_key).expect("Failed to read public key");
+            let signature_bytes = fs::read(&signature).expect("Failed to read signature");
+            
+            // Verify REAL Dilithium-5 signature (native only)
+            let public_key_obj = PublicKey::from_bytes(&public_key_bytes).expect("Invalid public key");
+            let signed_message = SignedMessage::from_bytes(&signature_bytes).expect("Invalid signature");
+            
+            let verification_result = open(&signed_message, &public_key_obj);
+            let is_valid = verification_result.is_ok();
+            let elapsed = start_time.elapsed();
+            
+            if is_valid {
+                println!("✅ Native Dilithium-5 signature VALID in {:?}", elapsed);
+                std::process::exit(0);
+            } else {
+                println!("❌ Native Dilithium-5 signature INVALID in {:?}", elapsed);
+                std::process::exit(1);
+            }
         }
         
         Commands::Extract { receipt, format } => {

@@ -1,36 +1,34 @@
-const { ethers } = require("hardhat");
+const { ethers } = require('hardhat');
 
 async function main() {
-  console.log("🚀 Deploying QuantaSeal contracts (Session-Based Architecture)...");
-  
-  // Deploy SessionRegistry
-  const SessionRegistry = await ethers.getContractFactory("SessionRegistry");
-  const sessionRegistry = await SessionRegistry.deploy();
-  await sessionRegistry.waitForDeployment();
-  
-  console.log("✅ SessionRegistry deployed to:", await sessionRegistry.getAddress());
-  
-  // Deploy TrustlessVerifier (for backward compatibility)
-  const TrustlessVerifier = await ethers.getContractFactory("TrustlessVerifier");
-  const verifier = await TrustlessVerifier.deploy();
-  await verifier.waitForDeployment();
-  
-  console.log("✅ TrustlessVerifier deployed to:", await verifier.getAddress());
-  
-  // Deploy HybridWalletFactory
-  const HybridWalletFactory = await ethers.getContractFactory("HybridWalletFactory");
-  const factory = await HybridWalletFactory.deploy(await sessionRegistry.getAddress());
-  await factory.waitForDeployment();
-  
-  console.log("✅ HybridWalletFactory deployed to:", await factory.getAddress());
-  
-  console.log("\n📋 Update these addresses in your UI:");
-  console.log(`VITE_FACTORY_ADDRESS=${await factory.getAddress()}`);
-  console.log(`VITE_SESSION_REGISTRY_ADDRESS=${await sessionRegistry.getAddress()}`);
-  console.log(`VITE_VERIFIER_ADDRESS=${await verifier.getAddress()}`);
+    console.log('🚀 Deploying QuantumSafeWallet...');
+    
+    // RISC Zero verifier address on Sepolia (from Boundless docs)
+    const VERIFIER_ADDRESS = '0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187';
+    
+    // Dilithium program image ID (this would be your compiled zkVM program)
+    const DILITHIUM_IMAGE_ID = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+    
+    const QuantumSafeWallet = await ethers.getContractFactory('QuantumSafeWallet');
+    const wallet = await QuantumSafeWallet.deploy(VERIFIER_ADDRESS, DILITHIUM_IMAGE_ID);
+    
+    await wallet.waitForDeployment();
+    const address = await wallet.getAddress();
+    
+    console.log('✅ QuantumSafeWallet deployed to:', address);
+    console.log('🔗 Verifier:', VERIFIER_ADDRESS);
+    console.log('🆔 Image ID:', DILITHIUM_IMAGE_ID);
+    
+    return address;
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+    main()
+        .then(() => process.exit(0))
+        .catch((error) => {
+            console.error(error);
+            process.exit(1);
+        });
+}
+
+module.exports = main;
