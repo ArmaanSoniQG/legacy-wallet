@@ -18,7 +18,7 @@ async function trueNativeDilithiumVerify(publicKeyBytes, signatureBytes, message
         fs.writeFileSync(pubKeyPath, Buffer.from(publicKeyBytes, 'hex'));
         fs.writeFileSync(sigPath, Buffer.from(signatureBytes, 'hex'));
         
-        // Use the new verify-native command
+        // Use the working verify-native command
         const result = await runHostBinary([
             'verify-native',
             '--public-key', pubKeyPath,
@@ -110,7 +110,7 @@ async function generateAndSignTrueNative(message) {
 
 async function runHostBinary(args) {
     return new Promise((resolve) => {
-        const process = spawn('../target/release/host', args, {
+        const process = spawn('/workspaces/legacy-wallet/dilithium-zkvm/target/release/host', args, {
             cwd: path.dirname(__filename)
         });
         let stdout = '';

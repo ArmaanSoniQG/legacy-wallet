@@ -2,11 +2,8 @@
 > session-wallet@1.0.0 dev
 > vite
 
-Port 5173 is in use, trying another one...
 
-  VITE v4.5.14  ready in 208 ms
+  VITE v4.5.14  ready in 1911 ms
 
-  ➜  Local:   http://localhost:512:47:10 AM [vite] hmr update /src/App.jsx
-12:47:15 AM [vite] hmr update /src/App.jsx
-12:54:19 AM [vite] hmr update /src/App.jsx
-2:54:19 AM [vite] hmr update /src/App.jsx
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose

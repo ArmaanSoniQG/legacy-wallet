@@ -1,6 +1,6 @@
 use methods::{DILITHIUM_VERIFIER_ELF, DILITHIUM_VERIFIER_ID};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use bonsai_sdk::alpha as bonsai_sdk;
+// Removed Bonsai SDK for now - using local proving only
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -153,51 +153,16 @@ async fn main() {
                 .build()
                 .unwrap();
             
-            let receipt = if let Ok(client) = bonsai_sdk::Client::from_env() {
-                println!("🚀 Using Bonsai remote proving...");
-                
-                // Create Bonsai session
-                let img_id = hex::encode(DILITHIUM_VERIFIER_ID);
-                let input_data = bincode::serialize(&input).unwrap();
-                
-                let session = client.create_session(img_id, input_data, vec![]).await.unwrap();
-                let session_id = session.uuid;
-                
-                // Poll for completion
-                loop {
-                    let status = client.session_status(session_id).await.unwrap();
-                    match status.status.as_str() {
-                        "SUCCEEDED" => {
-                            println!("✅ Bonsai proof completed!");
-                            break;
-                        }
-                        "RUNNING" => {
-                            println!("⏳ Bonsai proving in progress...");
-                            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                        }
-                        "FAILED" => {
-                            panic!("❌ Bonsai proving failed");
-                        }
-                        _ => {
-                            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-                        }
-                    }
-                }
-                
-                // Download receipt
-                let receipt_data = client.session_receipt(session_id).await.unwrap();
-                bincode::deserialize(&receipt_data).unwrap()
-            } else {
-                println!("⚠️  Bonsai not configured, using local proving...");
-                let prover = default_prover();
-                prover.prove(env, DILITHIUM_VERIFIER_ELF).unwrap().receipt
-            };
+            // Use local proving for now (Bonsai SDK has breaking changes)
+            println!("⚠️  Using local proving (Bonsai SDK disabled)...");
+            let prover = default_prover();
+            let receipt = prover.prove(env, DILITHIUM_VERIFIER_ELF).unwrap().receipt;
             
             // Verify the receipt
             receipt.verify(DILITHIUM_VERIFIER_ID).unwrap();
             
             // Save receipt
-            let receipt_bytes = bincode::serialize(&receipt.receipt).unwrap();
+            let receipt_bytes = bincode::serialize(&receipt).unwrap();
             fs::write(&output, &receipt_bytes).expect("Failed to write receipt");
             
             println!("✅ REAL zkVM proof generated and verified!");
@@ -216,7 +181,13 @@ async fn main() {
             let signed_message = SignedMessage::from_bytes(&signature_bytes).expect("Invalid signature");
             
             let verification_result = open(&signed_message, &public_key_obj);
-            let is_valid = verification_result.is_ok();
+            let is_valid = match verification_result {
+                Ok(extracted_message) => {
+                    // Check if extracted message matches provided message
+                    extracted_message == message.as_bytes()
+                }
+                Err(_) => false
+            };
             let elapsed = start_time.elapsed();
             
             if is_valid {

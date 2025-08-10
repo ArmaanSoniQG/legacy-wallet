@@ -87,32 +87,16 @@ app.post('/create-instant-session', async (req, res) => {
         
         console.log('🌳 Merkle root created:', merkleRoot?.slice(0, 16) + '...');
         
-        // Step 3: Store session root on-chain (fast)
-        const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
-        const privateKey = req.body.privateKey || 'a8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd';
-        const wallet = new ethers.Wallet(privateKey, provider);
-        
-        const registryAddress = '0xF6A16e33306314CCF957C293252Ff0511a76bd06';
-        const registryABI = [
-            "function setSessionRoot(bytes32 merkleRoot, uint256 duration) external"
-        ];
-        
-        const registry = new ethers.Contract(registryAddress, registryABI, wallet);
-        const tx = await registry.setSessionRoot(
-            '0x' + merkleRoot,
-            24 * 60 * 60 // 24 hours
-        );
-        
-        console.log('🚀 Session root stored on-chain:', tx.hash);
-        await tx.wait();
+        // Step 3: Session is immediately valid based on native crypto
+        console.log('⚡ Session immediately valid via native Dilithium verification');
         
         const totalTime = Date.now() - startTime;
         console.log(`⚡ INSTANT session created in ${totalTime}ms!`);
         
-        // Step 4: Start background zkVM audit (async)
-        console.log('🔍 Starting background zkVM audit...');
+        // Step 4: Start background operations (on-chain storage + zkVM audit)
+        console.log('🔍 Starting background operations...');
         setImmediate(() => {
-            backgroundAudit(merkleRoot, sessionLeaf, userAddress);
+            backgroundOperations(merkleRoot, sessionLeaf, userAddress, req.body.privateKey);
         });
         
         res.json({
@@ -121,15 +105,15 @@ app.post('/create-instant-session', async (req, res) => {
                 merkleRoot: merkleRoot,
                 leaf: sessionLeaf,
                 inclusionProof: inclusionProof,
-                transactionHash: tx.hash,
                 auditStatus: 'pending',
                 nativeVerified: true,
-                publicKey: nativeResult.publicKey
+                publicKey: nativeResult.publicKey,
+                onChainStatus: 'submitting'
             },
             timing: {
                 totalTime: totalTime,
                 nativeVerifyTime: nativeResult.timeMs,
-                phase: 'instant-with-native-pq'
+                phase: 'instant-native-pq'
             }
         });
         
@@ -141,11 +125,40 @@ app.post('/create-instant-session', async (req, res) => {
     }
 });
 
-async function backgroundAudit(merkleRoot, sessionLeaf, userAddress) {
+async function backgroundOperations(merkleRoot, sessionLeaf, userAddress, privateKey) {
     try {
-        console.log('🔍 Background audit starting for root:', merkleRoot?.slice(0, 16) + '...');
+        console.log('🔍 Background operations starting for root:', merkleRoot?.slice(0, 16) + '...');
         
-        // Run REAL zkVM proof in background
+        // First: Store session root on-chain (background)
+        console.log('🚀 Storing session root on-chain (background)...');
+        const onChainStartTime = Date.now();
+        
+        try {
+            const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
+            const wallet = new ethers.Wallet(privateKey || 'a8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd', provider);
+            
+            const registryAddress = '0xF6A16e33306314CCF957C293252Ff0511a76bd06';
+            const registryABI = [
+                "function setSessionRoot(bytes32 merkleRoot, uint256 duration) external"
+            ];
+            
+            const registry = new ethers.Contract(registryAddress, registryABI, wallet);
+            const tx = await registry.setSessionRoot(
+                '0x' + merkleRoot,
+                24 * 60 * 60 // 24 hours
+            );
+            
+            console.log('🚀 Session root submitted to chain:', tx.hash);
+            await tx.wait();
+            
+            const onChainTime = Date.now() - onChainStartTime;
+            console.log(`✅ Session root confirmed on-chain in ${onChainTime}ms`);
+            
+        } catch (onChainError) {
+            console.log('⚠️ On-chain storage failed:', onChainError.message);
+        }
+        
+        // Second: Run REAL zkVM proof in background
         console.log('🚀 Starting REAL zkVM proof generation...');
         const zkVMStartTime = Date.now();
         
