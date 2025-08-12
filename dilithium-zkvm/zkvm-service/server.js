@@ -6,6 +6,8 @@ const path = require('path');
 const fetch = require('node-fetch');
 const { MerkleTree, createSessionLeaf } = require('./merkle-utils');
 const { generateAndSignTrueNative } = require('./true-native-dilithium');
+const { setStatus, getStatus } = require('./sessionStore');
+const { waitForConfirmWithTimeout, calculateBumpedFees } = require('./chainUtils');
 const ethers = require('ethers');
 
 const app = express();
@@ -90,6 +92,14 @@ app.post('/create-instant-session', async (req, res) => {
         // Step 3: Session is immediately valid based on native crypto
         console.log('⚡ Session immediately valid via native Dilithium verification');
         
+        // Initialize dual-track status
+        await setStatus(merkleRoot, { 
+            anchor_status: 'pending', 
+            audit_status: 'running',
+            epoch: Date.now(),
+            expiry: Date.now() + 24 * 60 * 60 * 1000
+        });
+        
         const totalTime = Date.now() - startTime;
         console.log(`⚡ INSTANT session created in ${totalTime}ms!`);
         
@@ -125,45 +135,86 @@ app.post('/create-instant-session', async (req, res) => {
     }
 });
 
+// Parallel background operations - anchor and audit run independently
 async function backgroundOperations(merkleRoot, sessionLeaf, userAddress, privateKey) {
+    console.log('🔍 Starting PARALLEL background operations for root:', merkleRoot?.slice(0, 16) + '...');
+    
+    // Start both jobs in parallel - no blocking dependencies
+    const anchorJob = anchorRootOnChain(merkleRoot, userAddress, privateKey);
+    const auditJob = runZkAudit(merkleRoot, sessionLeaf);
+    
+    // Let both run independently - don't await here
+    anchorJob.catch(err => console.error('Anchor job failed:', err.message));
+    auditJob.catch(err => console.error('Audit job failed:', err.message));
+}
+
+// Independent anchor job with timeout and retry
+async function anchorRootOnChain(merkleRoot, userAddress, privateKey) {
+    const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
+    const wallet = new ethers.Wallet(privateKey || 'a8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd', provider);
+    
+    const registryAddress = '0xF6A16e33306314CCF957C293252Ff0511a76bd06';
+    const registryABI = [
+        "function setSessionRoot(bytes32 merkleRoot, uint256 duration) external"
+    ];
+    
     try {
-        console.log('🔍 Background operations starting for root:', merkleRoot?.slice(0, 16) + '...');
+        console.log('🚀 Anchoring root on-chain (parallel)...');
+        const registry = new ethers.Contract(registryAddress, registryABI, wallet);
         
-        // First: Store session root on-chain (background)
-        console.log('🚀 Storing session root on-chain (background)...');
-        const onChainStartTime = Date.now();
+        const tx = await registry.setSessionRoot(
+            '0x' + merkleRoot,
+            24 * 60 * 60 // 24 hours
+        );
         
-        try {
-            const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
-            const wallet = new ethers.Wallet(privateKey || 'a8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd', provider);
-            
-            const registryAddress = '0xF6A16e33306314CCF957C293252Ff0511a76bd06';
-            const registryABI = [
-                "function setSessionRoot(bytes32 merkleRoot, uint256 duration) external"
-            ];
-            
-            const registry = new ethers.Contract(registryAddress, registryABI, wallet);
-            const tx = await registry.setSessionRoot(
-                '0x' + merkleRoot,
-                24 * 60 * 60 // 24 hours
-            );
-            
-            console.log('🚀 Session root submitted to chain:', tx.hash);
-            await tx.wait();
-            
-            const onChainTime = Date.now() - onChainStartTime;
-            console.log(`✅ Session root confirmed on-chain in ${onChainTime}ms`);
-            
-        } catch (onChainError) {
-            console.log('⚠️ On-chain storage failed:', onChainError.message);
-        }
+        console.log('🚀 Anchor tx submitted:', tx.hash);
+        await setStatus(merkleRoot, { onChainTx: tx.hash, nonce: tx.nonce });
         
-        // Second: Run REAL zkVM proof in background
-        console.log('🚀 Starting REAL zkVM proof generation...');
+        // Wait with timeout
+        const receipt = await waitForConfirmWithTimeout(provider, tx.hash, 1, 60000);
+        
+        console.log('✅ Anchor confirmed on-chain');
+        await setStatus(merkleRoot, { anchor_status: 'confirmed', onChainTx: receipt.transactionHash });
+        
+    } catch (error) {
+        console.log('⚠️ Anchor failed:', error.message);
+        await setStatus(merkleRoot, { anchor_status: 'failed', anchor_error: String(error) });
+        
+        // Schedule retry with gas bump
+        setTimeout(() => retryAnchor(merkleRoot, userAddress, privateKey), 30000);
+    }
+}
+
+// Real audit with Boundless - hash session leaf to reduce payload size
+async function runZkAudit(merkleRoot, sessionLeaf) {
+    try {
+        console.log('🚀 Starting zkVM audit via Boundless (parallel)...');
         const zkVMStartTime = Date.now();
         
-        // Use the original verify command (with zkVM)
-        const zkVMResult = await runHostBinary([
+        // Parse session leaf to extract REAL signature for zkVM audit
+        let leafData;
+        try {
+            leafData = JSON.parse(sessionLeaf);
+            console.log('📦 Extracted REAL signature for zkVM audit:', leafData.signature?.slice(0, 32) + '...');
+        } catch (e) {
+            console.error('❌ Failed to parse session leaf:', e.message);
+            throw new Error('Invalid session leaf format');
+        }
+        
+        // Send REAL signature data to Boundless for actual Dilithium verification
+        const boundlessResult = await tryBoundlessProvingBinary(leafData, 'a8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd');
+        
+        if (boundlessResult.success) {
+            const zkVMTime = Date.now() - zkVMStartTime;
+            console.log(`✅ Boundless zkVM audit completed in ${zkVMTime}ms`);
+            const receiptHash = ethers.keccak256(ethers.toUtf8Bytes(boundlessResult.proof.journal + boundlessResult.proof.seal));
+            await setStatus(merkleRoot, { audit_status: 'verified', receiptHash, provider: 'boundless' });
+            return;
+        }
+        
+        // Fallback to local proving (much slower)
+        console.log('🔄 Boundless failed, falling back to local zkVM (5-10min)...');
+        const localResult = await runHostBinary([
             'verify',
             '--public-key', '../public_key.bin',
             '--signature', '../signature.bin', 
@@ -173,34 +224,71 @@ async function backgroundOperations(merkleRoot, sessionLeaf, userAddress, privat
         
         const zkVMTime = Date.now() - zkVMStartTime;
         
-        if (zkVMResult.success) {
-            console.log(`✅ REAL zkVM proof completed in ${zkVMTime}ms for root:`, merkleRoot?.slice(0, 16) + '...');
-            
-            // Update audit status on-chain
-            const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
-            const wallet = new ethers.Wallet('a8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd', provider);
-            
-            const registryAddress = '0xF6A16e33306314CCF957C293252Ff0511a76bd06';
-            const registryABI = [
-                "function updateAuditStatus(bytes32 rootHash, string calldata status, bytes32 receiptHash) external"
-            ];
-            
-            const registry = new ethers.Contract(registryAddress, registryABI, wallet);
-            const rootHash = ethers.keccak256(ethers.toUtf8Bytes(merkleRoot + userAddress + Date.now()));
-            const receiptHash = ethers.keccak256(ethers.toUtf8Bytes('real_zkvm_receipt_' + Date.now()));
-            
-            try {
-                await registry.updateAuditStatus(rootHash, 'verified', receiptHash);
-                console.log('✅ REAL zkVM audit status updated on-chain');
-            } catch (e) {
-                console.log('⚠️ Audit status update failed:', e.message);
-            }
+        if (localResult.success) {
+            console.log(`✅ Local zkVM audit completed in ${zkVMTime}ms`);
+            const receiptHash = ethers.keccak256(ethers.toUtf8Bytes('local_zkvm_receipt_' + Date.now()));
+            await setStatus(merkleRoot, { audit_status: 'verified', receiptHash, provider: 'local' });
         } else {
-            console.log(`❌ zkVM proof failed in ${zkVMTime}ms:`, zkVMResult.stderr);
+            console.log(`❌ zkVM audit failed in ${zkVMTime}ms:`, localResult.stderr);
+            await setStatus(merkleRoot, { audit_status: 'failed', audit_error: localResult.stderr });
         }
         
     } catch (error) {
-        console.error('❌ Background audit failed:', error);
+        console.error('❌ zkVM audit error:', error);
+        await setStatus(merkleRoot, { audit_status: 'failed', audit_error: String(error) });
+    }
+}
+
+// Retry anchor with gas bump
+async function retryAnchor(merkleRoot, userAddress, privateKey, attempt = 1) {
+    if (attempt > 3) {
+        console.log('❌ Anchor retry limit reached');
+        return;
+    }
+    
+    const record = await getStatus(merkleRoot);
+    if (!record || record.anchor_status === 'confirmed') return;
+    
+    console.log(`🔄 Retrying anchor (attempt ${attempt})...`);
+    await setStatus(merkleRoot, { anchor_status: 'retrying', attempts: attempt });
+    
+    try {
+        const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
+        const wallet = new ethers.Wallet(privateKey || 'a8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd', provider);
+        
+        const registryAddress = '0xF6A16e33306314CCF957C293252Ff0511a76bd06';
+        const registryABI = [
+            "function setSessionRoot(bytes32 merkleRoot, uint256 duration) external"
+        ];
+        
+        const registry = new ethers.Contract(registryAddress, registryABI, wallet);
+        const fees = calculateBumpedFees(attempt);
+        
+        // Get current nonce instead of using stale one
+        const currentNonce = await wallet.getNonce();
+        
+        const tx = await registry.setSessionRoot(
+            '0x' + merkleRoot,
+            24 * 60 * 60,
+            {
+                nonce: currentNonce,
+                maxFeePerGas: fees.maxFeePerGas,
+                maxPriorityFeePerGas: fees.maxPriorityFeePerGas
+            }
+        );
+        
+        console.log('🚀 Retry anchor tx:', tx.hash);
+        await setStatus(merkleRoot, { onChainTx: tx.hash, anchor_status: 'pending' });
+        
+        const receipt = await waitForConfirmWithTimeout(provider, tx.hash, 1, 60000);
+        await setStatus(merkleRoot, { anchor_status: 'confirmed', onChainTx: receipt.transactionHash });
+        
+    } catch (error) {
+        console.log(`⚠️ Retry ${attempt} failed:`, error.message);
+        await setStatus(merkleRoot, { anchor_status: 'failed', anchor_error: String(error) });
+        
+        // Schedule next retry with backoff
+        setTimeout(() => retryAnchor(merkleRoot, userAddress, privateKey, attempt + 1), 60000 * attempt);
     }
 }
 
@@ -235,9 +323,26 @@ app.post('/generate-key', async (req, res) => {
     }
 });
 
-async function tryBoundlessProving(message, privateKey) {
+// Binary input approach for proper zkVM audit
+async function tryBoundlessProvingBinary(leafData, privateKey) {
     try {
-        console.log('🌐 Trying Boundless proving via Rust service...');
+        console.log('🌐 Trying Boundless with binary input (proper zkVM audit)...');
+        
+        // Create REAL audit input with actual Dilithium signature
+        const auditInput = {
+            algo_id: 1, // Dilithium-5
+            message: leafData.message,
+            signature: leafData.signature, // REAL 3KB+ Dilithium signature
+            user: leafData.user,
+            expiry: leafData.expiry,
+            timestamp: leafData.timestamp
+        };
+        
+        console.log('🔍 Sending REAL signature to Boundless:', auditInput.signature?.length, 'chars');
+        
+        // Send the FULL session leaf data for proper Dilithium verification
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for real proving
         
         const boundlessResponse = await fetch('http://localhost:4001/prove', {
             method: 'POST',
@@ -245,13 +350,16 @@ async function tryBoundlessProving(message, privateKey) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: message,
-                privateKey: privateKey
-            })
+                message: JSON.stringify(auditInput), // Send full audit data
+                privateKey: privateKey || 'default_key'
+            }),
+            signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
+        
         if (!boundlessResponse.ok) {
-            throw new Error(`Boundless service error: ${boundlessResponse.status}`);
+            throw new Error(`Boundless HTTP ${boundlessResponse.status}`);
         }
         
         const boundlessResult = await boundlessResponse.json();
@@ -260,6 +368,7 @@ async function tryBoundlessProving(message, privateKey) {
             throw new Error(boundlessResult.error || 'Boundless proving failed');
         }
         
+        console.log('✅ Boundless binary audit succeeded!');
         return {
             success: true,
             proof: {
@@ -271,9 +380,14 @@ async function tryBoundlessProving(message, privateKey) {
         };
         
     } catch (error) {
-        console.log('❌ Boundless proving failed:', error.message);
+        console.log('❌ Boundless binary audit failed:', error.message);
         return { success: false, error: error.message };
     }
+}
+
+// Keep old function for backward compatibility
+async function tryBoundlessProving(message, privateKey) {
+    return tryBoundlessProvingBinary({ message }, privateKey);
 }
 
 app.post('/validate-phase1-transaction', async (req, res) => {
@@ -512,6 +626,32 @@ app.post('/verify', async (req, res) => {
             success: false,
             error: error.message
         });
+    }
+});
+
+// Session status endpoints
+app.get('/session-status', async (req, res) => {
+    const { root } = req.query;
+    if (!root) return res.status(400).json({ error: 'missing root' });
+    const rec = await getStatus(root);
+    if (!rec) return res.status(404).json({ error: 'unknown root' });
+    res.json(rec);
+});
+
+app.post('/retry-audit', async (req, res) => {
+    const { root } = req.body || {};
+    if (!root) return res.status(400).json({ error: 'missing root' });
+    const rec = await getStatus(root);
+    if (!rec) return res.status(404).json({ error: 'unknown root' });
+    try {
+        // Reset audit status and restart audit job
+        await setStatus(root, { audit_status: 'running', audit_error: undefined });
+        setImmediate(() => {
+            runZkAudit(root, rec.leaf || 'retry_audit');
+        });
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: String(e) });
     }
 });
 

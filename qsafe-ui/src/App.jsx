@@ -1,5 +1,104 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+
+function DualTrackStatus({ root }) {
+  const [sessionData, setSessionData] = useState(null);
+
+  useEffect(() => {
+    if (!root) return;
+    
+    let alive = true;
+    const poll = async () => {
+      try {
+        const r = await fetch(`http://localhost:4000/session-status?root=${root}`);
+        if (r.ok) {
+          const data = await r.json();
+          if (alive) {
+            setSessionData(data);
+          }
+          // Keep polling if either track is still pending/running
+          if (data.audit_status === 'pending' || data.audit_status === 'running' || 
+              data.anchor_status === 'pending' || data.anchor_status === 'retrying') {
+            setTimeout(poll, 2000);
+          }
+        } else {
+          setTimeout(poll, 2000);
+        }
+      } catch {
+        setTimeout(poll, 2000);
+      }
+    };
+    poll();
+    return () => { alive = false; };
+  }, [root]);
+
+  const handleRetryAudit = async () => {
+    try {
+      await fetch('http://localhost:4000/retry-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ root })
+      });
+      setSessionData(prev => ({ ...prev, audit_status: 'running' }));
+    } catch (e) {
+      console.error('Retry failed:', e);
+    }
+  };
+
+  if (!sessionData) {
+    return <span className="text-gray-500">🔍 Status: Loading...</span>;
+  }
+
+  const { audit_status, anchor_status, session_state } = sessionData;
+
+  return (
+    <div>
+      {/* Main session state */}
+      <div className={`font-bold ${
+        session_state === 'VERIFIED' ? 'text-green-600' : 
+        session_state === 'PENDING' ? 'text-yellow-600' : 
+        session_state === 'DEGRADED' ? 'text-orange-600' : 'text-red-600'
+      }`}>
+        🔍 Session: {session_state === 'VERIFIED' ? '✅ VERIFIED' : 
+                           session_state === 'PENDING' ? '… PENDING' :
+                           session_state === 'DEGRADED' ? '⚠️ DEGRADED' : '❌ FAILED'}
+      </div>
+      
+      {/* Audit track */}
+      <div className="text-xs mt-1">
+        <span className={audit_status === 'verified' ? 'text-green-600' : 
+                        audit_status === 'failed' ? 'text-red-600' : 'text-gray-600'}>
+          Audit: {audit_status === 'verified' ? '✅ Verified' :
+                  audit_status === 'running' ? '⚙️ Running' :
+                  audit_status === 'failed' ? '❌ Failed' : '… Pending'}
+        </span>
+        {audit_status === 'failed' && (
+          <button 
+            onClick={handleRetryAudit}
+            className="ml-2 px-1 py-0.5 bg-red-500 text-white text-xs rounded"
+          >
+            Retry
+          </button>
+        )}
+      </div>
+      
+      {/* Anchor track */}
+      <div className="text-xs">
+        <span className={anchor_status === 'confirmed' ? 'text-green-600' : 
+                        anchor_status === 'failed' ? 'text-red-600' : 'text-gray-600'}>
+          Anchor: {anchor_status === 'confirmed' ? '✅ On-chain' :
+                   anchor_status === 'retrying' ? '🔄 Retrying' :
+                   anchor_status === 'failed' ? '❌ Failed' : '… Pending'}
+        </span>
+        {sessionData.onChainTx && (
+          <span className="ml-2 text-blue-500 text-xs">
+            {sessionData.onChainTx.slice(0, 8)}...
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [connected, setConnected] = useState(false);
@@ -74,14 +173,8 @@ export default function App() {
       setSessionActive(true);
       setLoading(false);
       
-      // Show audit completion after 20 seconds
-      setTimeout(() => {
-        console.log('✅ Background zkVM audit completed!');
-        setSessionProof(prev => ({
-          ...prev,
-          auditStatus: 'verified'
-        }));
-      }, 20000);
+      // Real-time audit status polling (no fake timer)
+      console.log('🔍 Starting real-time audit status polling...');
       
     } catch (err) {
       console.error('Session creation error:', err);
@@ -179,14 +272,8 @@ export default function App() {
           <div className="text-sm text-gray-600 mb-4">
             🌳 Merkle Root: {sessionProof?.merkleRoot?.slice(0, 16)}...
             <br />🔐 Native PQ: <span className="font-bold text-green-600">✅ Dilithium Verified</span>
-            <br />🔍 zkVM Audit: 
-            <span className={`font-bold ${
-              sessionProof?.auditStatus === 'verified' ? 'text-green-600' : 
-              sessionProof?.auditStatus === 'pending' ? 'text-yellow-600' : 'text-red-600'
-            }`}>
-              {sessionProof?.auditStatus === 'verified' ? '✅ Receipt Verified' :
-               sessionProof?.auditStatus === 'pending' ? '🔄 Generating Receipt...' : '❌ Failed'}
-            </span>
+            <br /><DualTrackStatus root={sessionProof?.merkleRoot} />
+            <div className="text-xs text-blue-500 mt-1">DEBUG: Dual-track architecture (audit + anchor)</div>
           </div>
           
           <div className="mt-4">

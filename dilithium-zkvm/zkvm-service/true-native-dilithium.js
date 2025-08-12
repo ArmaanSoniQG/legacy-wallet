@@ -2,6 +2,9 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// Portable host binary path
+const HOST_BIN = process.env.HOST_BIN || path.resolve(__dirname, '../target/release/host');
+
 // TRUE native Dilithium verification without any zkVM
 async function trueNativeDilithiumVerify(publicKeyBytes, signatureBytes, message) {
     console.log('🔐 TRUE native Dilithium verification (NO zkVM)...');
@@ -110,8 +113,18 @@ async function generateAndSignTrueNative(message) {
 
 async function runHostBinary(args) {
     return new Promise((resolve) => {
-        const process = spawn('/workspaces/legacy-wallet/dilithium-zkvm/target/release/host', args, {
+        const process = spawn(HOST_BIN, args, {
             cwd: path.dirname(__filename)
+        });
+        
+        process.on('error', (err) => {
+            console.error('Host binary spawn error:', err.message);
+            resolve({
+                success: false,
+                stdout: '',
+                stderr: `Spawn error: ${err.message}`,
+                exitCode: -1
+            });
         });
         let stdout = '';
         let stderr = '';
