@@ -103,10 +103,10 @@ app.post('/create-instant-session', async (req, res) => {
         const totalTime = Date.now() - startTime;
         console.log(`⚡ INSTANT session created in ${totalTime}ms!`);
         
-        // Step 4: Start background operations (on-chain storage + zkVM audit)
+        // Step 4: Start background operations (zkVM audit only in MetaMask mode)
         console.log('🔍 Starting background operations...');
         setImmediate(() => {
-            backgroundOperations(merkleRoot, sessionLeaf, userAddress, req.body.privateKey);
+            backgroundOperations(merkleRoot, sessionLeaf, userAddress, req.body.privateKey || req.body.signer);
         });
         
         res.json({
@@ -150,8 +150,16 @@ async function backgroundOperations(merkleRoot, sessionLeaf, userAddress, privat
 
 // Independent anchor job with timeout and retry
 async function anchorRootOnChain(merkleRoot, userAddress, privateKey) {
+    // Skip anchor if no private key provided (MetaMask mode)
+    if (!privateKey || privateKey === true) {
+        console.log('⚠️ Skipping anchor - MetaMask mode (no private key)');
+        await setStatus(merkleRoot, { anchor_status: 'skipped', anchor_note: 'MetaMask mode - no on-chain anchoring' });
+        return;
+    }
+    
     const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
-    const wallet = new ethers.Wallet(privateKey || 'a8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd', provider);
+    const wallet = new ethers.Wallet(privateKey, provider);
+    console.log('🔑 Using wallet for anchor:', wallet.address);
     
     const registryAddress = '0xF6A16e33306314CCF957C293252Ff0511a76bd06';
     const registryABI = [
@@ -264,8 +272,10 @@ async function retryAnchor(merkleRoot, userAddress, privateKey, attempt = 1) {
         const registry = new ethers.Contract(registryAddress, registryABI, wallet);
         const fees = calculateBumpedFees(attempt);
         
-        // Get current nonce instead of using stale one
+        // Get current nonce and check balance
         const currentNonce = await wallet.getNonce();
+        const balance = await provider.getBalance(wallet.address);
+        console.log('💰 Anchor wallet balance:', ethers.formatEther(balance), 'ETH');
         
         const tx = await registry.setSessionRoot(
             '0x' + merkleRoot,
@@ -323,35 +333,61 @@ app.post('/generate-key', async (req, res) => {
     }
 });
 
-// Binary input approach for proper zkVM audit
+// Binary input approach for proper zkVM audit (GPT's solution)
 async function tryBoundlessProvingBinary(leafData, privateKey) {
     try {
-        console.log('🌐 Trying Boundless with binary input (proper zkVM audit)...');
+        console.log('🌐 Trying Boundless with BINARY input file (fixing payload crash)...');
         
         // Create REAL audit input with actual Dilithium signature
         const auditInput = {
             algo_id: 1, // Dilithium-5
             message: leafData.message,
             signature: leafData.signature, // REAL 3KB+ Dilithium signature
-            user: leafData.user,
+            session_nonce: Date.now(),
             expiry: leafData.expiry,
-            timestamp: leafData.timestamp
+            wallet: leafData.user
         };
         
-        console.log('🔍 Sending REAL signature to Boundless:', auditInput.signature?.length, 'chars');
+        console.log('🔍 Creating binary input file for signature:', auditInput.signature?.length, 'chars');
         
-        // Send the FULL session leaf data for proper Dilithium verification
+        // Step 1: Get binary encoding from Boundless service
+        const encodeResponse = await fetch('http://localhost:4001/encode-input', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(auditInput)
+        });
+        
+        if (!encodeResponse.ok) {
+            throw new Error(`Encode failed: ${encodeResponse.status}`);
+        }
+        
+        const binaryData = await encodeResponse.arrayBuffer();
+        
+        // Step 2: Write binary input file
+        const fs = require('fs').promises;
+        const path = require('path');
+        const inputDir = path.resolve(__dirname, '../cache/boundless');
+        await fs.mkdir(inputDir, { recursive: true });
+        
+        const inputFile = path.join(inputDir, `input-${Date.now()}.bin`);
+        await fs.writeFile(inputFile, Buffer.from(binaryData));
+        
+        console.log('📁 Binary input file created:', inputFile, 'size:', binaryData.byteLength, 'bytes');
+        
+        // Step 3: Submit to Boundless with --input-file (no more JSON payload crash)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for real proving
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
         
-        const boundlessResponse = await fetch('http://localhost:4001/prove', {
+        const boundlessResponse = await fetch('http://localhost:4001/prove-binary', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: JSON.stringify(auditInput), // Send full audit data
-                privateKey: privateKey || 'default_key'
+                inputFile: inputFile,
+                privateKey: 'a8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd' // Valid hex key for Boundless
             }),
             signal: controller.signal
         });
@@ -368,14 +404,14 @@ async function tryBoundlessProvingBinary(leafData, privateKey) {
             throw new Error(boundlessResult.error || 'Boundless proving failed');
         }
         
-        console.log('✅ Boundless binary audit succeeded!');
+        console.log('✅ Boundless BINARY audit succeeded! No more payload crashes!');
         return {
             success: true,
             proof: {
                 journal: boundlessResult.proof.journal,
                 seal: boundlessResult.proof.seal,
                 isValid: boundlessResult.proof.is_valid,
-                provider: 'boundless'
+                provider: 'boundless_binary'
             }
         };
         

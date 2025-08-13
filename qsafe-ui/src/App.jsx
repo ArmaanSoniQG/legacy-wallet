@@ -136,14 +136,14 @@ export default function App() {
       console.log('⚡ PHASE 1: Creating INSTANT session...');
       const startTime = Date.now();
       
-      // Phase 1: Instant session with inclusion proof
+      // Phase 1: Instant session with connected wallet (no private key needed)
       const instantResponse = await fetch('http://localhost:4000/create-instant-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userAddress: address,
           message: 'instant_session_' + Date.now(),
-          privateKey: '0xa8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd'
+          signer: true // Use MetaMask signing instead of private key
         })
       });
       
