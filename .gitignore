@@ -1,3 +1,15 @@
-node_modules/
-target/
-*.tar.gz
+# secrets / local
+*.key
+*.pem
+.env
+/data/**
+/zkvm-service/data/**
+sessions.json
+session-status.json
+
+# rust targets
+**/target/
+
+# node
+node_modules
+dist

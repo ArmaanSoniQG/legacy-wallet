@@ -8,6 +8,7 @@ use clap::{Parser, Subcommand};
 use sha2::{Digest, Sha256};
 use pqcrypto_dilithium::dilithium5::*;
 use pqcrypto_traits::sign::{PublicKey, SecretKey, SignedMessage};
+use anyhow::{Result, Context};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -70,6 +71,13 @@ struct VerificationOutput {
 
 #[tokio::main]
 async fn main() {
+    if let Err(e) = real_main().await {
+        eprintln!("ERR:{}", e);
+        std::process::exit(1);
+    }
+}
+
+async fn real_main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     match args.command {
@@ -161,9 +169,13 @@ async fn main() {
             // Verify the receipt
             receipt.verify(DILITHIUM_VERIFIER_ID).unwrap();
             
-            // Save receipt
-            let receipt_bytes = bincode::serialize(&receipt).unwrap();
-            fs::write(&output, &receipt_bytes).expect("Failed to write receipt");
+            // Save receipt with consistent serialization
+            let receipt_bytes = bincode::serialize(&receipt)
+                .context("Failed to serialize receipt")?;
+            fs::write(&output, &receipt_bytes)
+                .context("Failed to write receipt")?;
+            
+            println!("Receipt serialized: {} bytes", receipt_bytes.len());
             
             println!("✅ REAL zkVM proof generated and verified!");
             println!("Receipt saved to: {}", output.display());
@@ -202,8 +214,12 @@ async fn main() {
         Commands::Extract { receipt, format } => {
             println!("Extracting verification data...");
             
-            let receipt_bytes = fs::read(&receipt).expect("Failed to read receipt");
-            let receipt: Receipt = bincode::deserialize(&receipt_bytes).unwrap();
+            let receipt_bytes = fs::read(&receipt)
+                .context("Failed to read receipt file")?;
+            
+            // Deserialize receipt with better error handling
+            let receipt: Receipt = bincode::deserialize(&receipt_bytes)
+                .map_err(|e| anyhow::anyhow!("Receipt deserialize failed: {} (file size: {} bytes)", e, receipt_bytes.len()))?;
             
             let output: VerificationOutput = receipt.journal.decode().unwrap();
             
@@ -221,4 +237,5 @@ async fn main() {
             }
         }
     }
+    Ok(())
 }

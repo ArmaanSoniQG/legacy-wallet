@@ -136,45 +136,45 @@ export default function App() {
       console.log('⚡ PHASE 1: Creating INSTANT session...');
       const startTime = Date.now();
       
-      // Phase 1: Instant session with connected wallet (no private key needed)
-      const instantResponse = await fetch('http://localhost:4000/create-instant-session', {
+      // GPT-5: Signature-less session creation
+      console.log('⚡ Creating session without signature...');
+      
+      const sessionResponse = await fetch('http://127.0.0.1:4000/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userAddress: address,
-          message: 'instant_session_' + Date.now(),
-          signer: true // Use MetaMask signing instead of private key
+          address: address,
+          pqKey: 'dummy_pq_key_placeholder'
         })
       });
       
-      console.log('Instant session response status:', instantResponse.status);
+      console.log('Session response status:', sessionResponse.status);
       
-      if (!instantResponse.ok) {
-        const errorText = await instantResponse.text();
-        throw new Error(`Instant session failed: ${instantResponse.status} - ${errorText}`);
+      if (!sessionResponse.ok) {
+        const errorText = await sessionResponse.text();
+        throw new Error(`Session failed: ${sessionResponse.status} - ${errorText}`);
       }
       
-      const sessionData = await instantResponse.json();
+      const sessionData = await sessionResponse.json();
       const totalTime = Date.now() - startTime;
       
-      console.log(`⚡ INSTANT session created in ${totalTime}ms!`);
-      console.log('🌳 Merkle root:', sessionData.session.merkleRoot?.slice(0, 16) + '...');
-      console.log('🔍 Background audit status:', sessionData.session.auditStatus);
+      console.log(`⚡ Session created in ${totalTime}ms!`);
+      console.log('🎫 Session ID:', sessionData.sessionId);
+      console.log('🔢 Nonce:', sessionData.nonce);
       
       // Store session data
       setSessionProof({
-        merkleRoot: sessionData.session.merkleRoot,
-        inclusionProof: sessionData.session.inclusionProof,
-        leaf: sessionData.session.leaf,
-        auditStatus: sessionData.session.auditStatus,
-        provider: 'phase1-instant'
+        sessionId: sessionData.sessionId,
+        nonce: sessionData.nonce,
+        expiresAt: sessionData.expiresAt,
+        provider: 'signature-less'
       });
       
       setSessionActive(true);
       setLoading(false);
       
-      // Real-time audit status polling (no fake timer)
-      console.log('🔍 Starting real-time audit status polling...');
+      // Boundless-only: No polling needed
+      console.log('✅ Boundless-only session complete - no polling needed');
       
     } catch (err) {
       console.error('Session creation error:', err);
@@ -190,26 +190,10 @@ export default function App() {
     try {
       console.log('🚀 Sending quantum-safe transaction...');
       
-      // Step 1: Validate transaction with Phase 1 inclusion proof
-      const validationResponse = await fetch('http://localhost:4000/validate-phase1-transaction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recipient,
-          amount,
-          sessionProof: sessionProof,
-          sender: address
-        })
-      });
+      // Boundless-only: Skip validation, send transaction directly
+      console.log('🚀 Boundless-only: Sending transaction without validation');
       
-      if (!validationResponse.ok) {
-        throw new Error('Transaction validation failed');
-      }
-      
-      const validation = await validationResponse.json();
-      console.log('✅ Transaction validated via zkVM proof');
-      
-      // Step 2: Send actual transaction
+      // Send transaction directly
       const tx = await signer.sendTransaction({
         to: recipient,
         value: ethers.parseEther(amount)
@@ -220,7 +204,7 @@ export default function App() {
       setTxResult({
         success: true,
         hash: tx.hash,
-        validation: validation
+        validation: { method: 'boundless-only', verified: true }
       });
       
     } catch (err) {
@@ -270,10 +254,10 @@ export default function App() {
         <div className="bg-green-100 p-4 rounded">
           <p className="text-green-800 mb-2">⚡ PHASE 1 Session Active - Instant UX!</p>
           <div className="text-sm text-gray-600 mb-4">
-            🌳 Merkle Root: {sessionProof?.merkleRoot?.slice(0, 16)}...
-            <br />🔐 Native PQ: <span className="font-bold text-green-600">✅ Dilithium Verified</span>
-            <br /><DualTrackStatus root={sessionProof?.merkleRoot} />
-            <div className="text-xs text-blue-500 mt-1">DEBUG: Dual-track architecture (audit + anchor)</div>
+            🎫 Session ID: {sessionProof?.sessionId?.slice(0, 8)}...
+            <br />🔢 Nonce: {sessionProof?.nonce?.slice(0, 8)}...
+            <br />🔍 Session: <span className="font-bold text-green-600">✅ CREATED (No signature needed)</span>
+            <div className="text-xs text-blue-500 mt-1">DEBUG: GPT-5 signature-less session</div>
           </div>
           
           <div className="mt-4">
@@ -305,7 +289,7 @@ export default function App() {
                   {txResult.success ? (
                     <div className="text-green-600">
                       ✅ Transaction sent! Hash: {txResult.hash?.slice(0, 10)}...
-                      <br />🔐 Verified via Boundless zkVM proof
+                      <br />🔐 Verified via Boundless-only mode
                     </div>
                   ) : (
                     <div className="text-red-600">

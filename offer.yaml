@@ -1,0 +1,16 @@
+# offer.yaml
+imageUrl: "https://dweb.link/ipfs/<YOUR_GUEST_CID>"
+
+# Minimal binding: require journal to start with 0xABCD (replace) or set journalDigest if you know it.
+requirements:
+  imageId: "0x<YOUR_IMAGE_ID_HEX>"
+  journalPrefix: "514d" # "QM" example; replace with your prefix
+
+offer:
+  minPrice: 100000000000000       # 0.0001 ETH
+  maxPrice: 2000000000000000      # 0.002 ETH
+  biddingStart: 0
+  rampUpPeriod: 120
+  timeout: 1800
+  lockTimeout: 1200
+  lockStake: 0

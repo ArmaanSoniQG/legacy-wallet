@@ -3,7 +3,12 @@
 > vite
 
 
-  VITE v4.5.14  ready in 1911 ms
+  VITE v4.5.14  ready in 2170 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
+8:45:01 PM [vite] page reload src/App.jsx
+8:45:07 PM [vite] page reload src/App.jsx
+8:45:14 PM [vite] page reload src/App.jsx
+8:45:22 PM [vite] page reload src/App.jsx
+9:03:21 PM [vite] page reload src/App.jsx
