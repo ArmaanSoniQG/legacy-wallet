@@ -1,0 +1,13 @@
+FROM rust:1.79-slim
+
+# basics
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential clang pkg-config libssl-dev git curl unzip ca-certificates \
+    protobuf-compiler && rm -rf /var/lib/apt/lists/*
+
+# risczero toolchain (guest build + helpers)
+RUN curl -L https://risczero.com/install | bash && \
+    /root/.risc0/bin/rzup install
+
+ENV PATH="/root/.cargo/bin:/root/.risc0/bin:${PATH}"
+WORKDIR /work

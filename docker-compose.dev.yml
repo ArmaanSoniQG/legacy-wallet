@@ -1,0 +1,14 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/work
+      - cargo-cache:/root/.cargo/registry
+      - target-cache:/work/target
+    working_dir: /work
+    command: sleep infinity
+volumes:
+  cargo-cache:
+  target-cache:
