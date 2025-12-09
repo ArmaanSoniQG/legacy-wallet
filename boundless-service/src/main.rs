@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::process::Command;
+use std::env;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use chrono::Utc;
@@ -28,6 +29,7 @@ struct ProofData {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = dotenvy::dotenv();
     let listener = TcpListener::bind("127.0.0.1:4001").await?;
     println!("🌐 Boundless service running on http://localhost:4001");
     
@@ -42,33 +44,66 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn handle_connection(mut stream: TcpStream) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = [0; 1024];
-    let n = stream.read(&mut buffer).await?;
-    let request = String::from_utf8_lossy(&buffer[..n]);
-    
-    if request.contains("POST /prove") {
-        // Extract JSON body (simplified parsing)
-        if let Some(body_start) = request.find("\r\n\r\n") {
-            let body = &request[body_start + 4..];
-            if let Ok(prove_req) = serde_json::from_str::<ProveRequest>(body) {
-                match submit_to_boundless(&prove_req.message, prove_req.private_key.as_deref()).await {
+    // Read until we have full headers
+    let mut req_bytes: Vec<u8> = Vec::with_capacity(2048);
+    let mut buf = [0u8; 2048];
+    let mut headers_end = req_bytes.len();
+    loop {
+        let n = stream.read(&mut buf).await?;
+        if n == 0 { break; }
+        req_bytes.extend_from_slice(&buf[..n]);
+        if let Some(pos) = twoway::find_bytes(&req_bytes, b"\r\n\r\n") {
+            headers_end = pos + 4;
+            break;
+        }
+        if req_bytes.len() > 64 * 1024 { break; }
+    }
+
+    let request = String::from_utf8_lossy(&req_bytes);
+    let first_line_end = request.find("\r\n").unwrap_or(request.len());
+    let request_line = &request[..first_line_end];
+    let (method, path) = {
+        let mut parts = request_line.split_whitespace();
+        (parts.next().unwrap_or(""), parts.next().unwrap_or(""))
+    };
+
+    // Parse headers for Content-Length
+    let mut content_length: usize = 0;
+    for line in request[request_line.len()..].split("\r\n") {
+        let l = line.trim();
+        if l.is_empty() { break; }
+        if let Some(val) = l.strip_prefix("Content-Length:") {
+            content_length = val.trim().parse::<usize>().unwrap_or(0);
+        }
+    }
+
+    // Collect full body if needed
+    let mut body_bytes = req_bytes.get(headers_end..).unwrap_or(&[]).to_vec();
+    while body_bytes.len() < content_length {
+        let n = stream.read(&mut buf).await?;
+        if n == 0 { break; }
+        body_bytes.extend_from_slice(&buf[..n]);
+    }
+
+    // Handle POST /prove and POST /api/prove
+    if method == "POST" && (path == "/prove" || path == "/api/prove") {
+        let prove_req: Result<ProveRequest, _> = serde_json::from_slice(&body_bytes);
+        match prove_req {
+            Ok(pr) => {
+                match submit_to_boundless(&pr.message, pr.private_key.as_deref()).await {
                     Ok(proof_data) => {
-                        let response = ProveResponse {
-                            success: true,
-                            proof: Some(proof_data),
-                            error: None,
-                        };
+                        let response = ProveResponse { success: true, proof: Some(proof_data), error: None };
                         send_response(&mut stream, &response).await?;
                     }
                     Err(e) => {
-                        let response = ProveResponse {
-                            success: false,
-                            proof: None,
-                            error: Some(e.to_string()),
-                        };
+                        let response = ProveResponse { success: false, proof: None, error: Some(e) };
                         send_response(&mut stream, &response).await?;
                     }
                 }
+            }
+            Err(e) => {
+                let response = ProveResponse { success: false, proof: None, error: Some(format!("invalid JSON: {}", e)) };
+                send_response(&mut stream, &response).await?;
             }
         }
     } else {
@@ -87,17 +122,26 @@ async fn handle_connection(mut stream: TcpStream) -> Result<(), Box<dyn std::err
 
 async fn submit_to_boundless(message: &str, private_key: Option<&str>) -> Result<ProofData, String> {
     println!("⚡ OPTIMIZED Boundless submission: {}", message);
-    
-    let private_key = private_key.unwrap_or("0xa8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd");
-    
+
+    // Pull from .env if present
+    let env_rpc = env::var("RPC_URL").unwrap_or_else(|_| "https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161".to_string());
+    let env_pk = env::var("PRIVATE_KEY").ok();
+    let env_boundless = env::var("BOUNDLESS_CMD").unwrap_or_else(|_| "/home/armaan/.cargo/bin/boundless".to_string());
+
+    // Choose private key: request overrides, else .env, else fallback sample
+    let private_key = private_key
+        .or(env_pk.as_deref())
+        .unwrap_or("0xa8d7b5049c2004e397a5fa3dcf905d121ac02fa8b74e068d421e080c8b459efd");
+
     // Optimized environment setup
     let start_time = std::time::Instant::now();
+
+    println!("🔧 Executing: {} with args: request submit-offer --input {} --program-url ...", env_boundless, message);
     
-    let output = Command::new("/home/codespace/.cargo/bin/boundless")
-        .env("RPC_URL", "https://ethereum-sepolia-rpc.publicnode.com")
+    let output = Command::new(&env_boundless)
         .env("PRIVATE_KEY", private_key.trim_start_matches("0x"))
-        .env("PATH", "/home/codespace/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
         .args(&[
+            "--rpc-url", &env_rpc,
             "request",
             "submit-offer",
             "--input", message,
@@ -110,7 +154,7 @@ async fn submit_to_boundless(message: &str, private_key: Option<&str>) -> Result
             let elapsed = start_time.elapsed();
             println!("✅ Boundless proving SUCCESS in {:?}", elapsed);
             
-            let stdout = String::from_utf8_lossy(&result.stdout);
+            let _stdout = String::from_utf8_lossy(&result.stdout);
             Ok(ProofData {
                 journal: format!("boundless_journal_{}", message),
                 seal: format!("boundless_seal_{}", chrono::Utc::now().timestamp()),
@@ -127,7 +171,13 @@ async fn submit_to_boundless(message: &str, private_key: Option<&str>) -> Result
         Err(e) => {
             let elapsed = start_time.elapsed();
             println!("❌ Boundless execution failed in {:?}: {}", elapsed, e);
-            Err(format!("Failed to run Boundless CLI: {} (CLI not installed?)", e))
+            println!("🔍 Debug info:");
+            println!("   Command: {}", env_boundless);
+            println!("   Working dir: {:?}", std::env::current_dir());
+            println!("   PATH: {:?}", std::env::var("PATH"));
+            println!("   File exists: {}", std::path::Path::new(&env_boundless).exists());
+            println!("   File executable: {:?}", std::fs::metadata(&env_boundless).map(|m| m.permissions()));
+            Err(format!("Failed to run Boundless CLI: {} (Debug info logged)", e))
         }
     }
 }

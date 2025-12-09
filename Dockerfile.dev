@@ -1,13 +1,21 @@
-FROM rust:1.79-slim
+FROM --platform=linux/amd64 rust:1.79-slim
 
 # basics
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential clang pkg-config libssl-dev git curl unzip ca-certificates \
-    protobuf-compiler && rm -rf /var/lib/apt/lists/*
+    protobuf-compiler nodejs npm && rm -rf /var/lib/apt/lists/*
 
 # risczero toolchain (guest build + helpers)
 RUN curl -L https://risczero.com/install | bash && \
     /root/.risc0/bin/rzup install
 
-ENV PATH="/root/.cargo/bin:/root/.risc0/bin:${PATH}"
+# boundless CLI - permanent install
+RUN curl -L https://github.com/boundless-xyz/boundless/releases/download/v0.1.0/boundless-linux-amd64 -o /usr/local/bin/boundless && \
+    chmod +x /usr/local/bin/boundless
+
+# rust components for RISC-V - use risc0 toolchain
+RUN /root/.risc0/bin/rzup install && \
+    rustup component add rust-src
+
+ENV PATH="/usr/local/cargo/bin:/root/.cargo/bin:/root/.risc0/bin:${PATH}"
 WORKDIR /work

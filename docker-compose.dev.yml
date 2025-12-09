@@ -1,14 +1,22 @@
 services:
   dev:
+    ports:
+      - "8787:8787"
+      - "5173:5173"
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile.dev
     volumes:
       - .:/work
       - cargo-cache:/root/.cargo/registry
+      - cargo-git:/root/.cargo/git
+      - risc0-toolchain:/root/.risc0
       - target-cache:/work/target
     working_dir: /work
     command: sleep infinity
 volumes:
   cargo-cache:
+  cargo-git:
+  risc0-toolchain:
   target-cache:

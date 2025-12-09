@@ -21,3 +21,7 @@
 # Cargo + tooling
 /.cargo/credentials
 /.cargo/.package-cache
+
+# Runner env (secrets; do not commit)
+tools/qs-runner/.env
+node_modules

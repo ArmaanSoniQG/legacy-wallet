@@ -9,6 +9,8 @@ echo "Building RISC Zero Dilithium zkVM project..."
 # Set environment variables
 export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="$HOME/.risc0/bin:$PATH"
+# Use a writable custom target dir to avoid OS permission issues
+export CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-target_writable}
 
 # Build the wallet CLI
 echo "Building wallet CLI..."
