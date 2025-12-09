@@ -12,4 +12,13 @@ session-status.json
 
 # node
 node_modules
-dist
+distboundless-src/
+boundless-src/
+dilithium-zkvm/wallet/target_writable/
+qsafe-ui/dist/
+
+dilithium-zkvm/host/target_writable/
+dilithium-zkvm/wallet/target_writable/
+qsafe-ui/dist/
+__MACOSX/
+deployment-fixed_DAD/
